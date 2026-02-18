@@ -1,0 +1,196 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* ===== Theme Variables ===== */
+:root {
+  /* Surfaces */
+  --bg-page-start: #060a14;
+  --bg-page-mid: #0c1425;
+  --bg-page-end: #10182a;
+  --bg-surface: rgba(255, 255, 255, 0.015);
+  --bg-surface-raised: rgba(255, 255, 255, 0.025);
+  --bg-interactive: rgba(255, 255, 255, 0.06);
+  --bg-progress-track: rgba(255, 255, 255, 0.04);
+  --bg-tooltip: #1e293b;
+  --bg-coin-idle: #172035;
+  --bg-coin-queue: #121b2e;
+  --bg-pause: #1a2540;
+  --bg-quiz-circle: #151d30;
+  --bg-coin-badge: #0a1020;
+  --bg-nav-inactive: #1e293b;
+
+  /* Text */
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --text-muted: #4b5c78;
+  --text-dimmer: #3b4963;
+  --text-faint: #1e293b;
+  --text-heading-from: #f1f5f9;
+  --text-heading-to: #94a3b8;
+  --text-quiz-option: #8b9bb5;
+  --text-coin-idle: #3e5070;
+  --text-coin-queue: #4b5e7a;
+  --text-coin-counter-dim: #2a3a55;
+
+  /* Borders */
+  --border-hairline: rgba(255, 255, 255, 0.04);
+  --border-faint: rgba(255, 255, 255, 0.05);
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-tooltip: #334155;
+  --border-disabled: #334155;
+  --border-nav-inactive: #334155;
+  --border-coin-idle: #253352;
+  --border-coin-queue: #1a2540;
+
+  /* Charts */
+  --chart-grid: #1a2540;
+  --chart-axis: #3e5070;
+}
+
+[data-theme="light"] {
+  /* Surfaces */
+  --bg-page-start: #f8fafc;
+  --bg-page-mid: #f1f5f9;
+  --bg-page-end: #e8ecf1;
+  --bg-surface: rgba(0, 0, 0, 0.025);
+  --bg-surface-raised: rgba(0, 0, 0, 0.04);
+  --bg-interactive: rgba(0, 0, 0, 0.06);
+  --bg-progress-track: rgba(0, 0, 0, 0.08);
+  --bg-tooltip: #ffffff;
+  --bg-coin-idle: #e2e8f0;
+  --bg-coin-queue: #f1f5f9;
+  --bg-pause: #e2e8f0;
+  --bg-quiz-circle: #e2e8f0;
+  --bg-coin-badge: #f8fafc;
+  --bg-nav-inactive: #e2e8f0;
+
+  /* Text */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #334155;
+  --text-muted: #64748b;
+  --text-dimmer: #94a3b8;
+  --text-faint: #cbd5e1;
+  --text-heading-from: #0f172a;
+  --text-heading-to: #475569;
+  --text-quiz-option: #475569;
+  --text-coin-idle: #94a3b8;
+  --text-coin-queue: #64748b;
+  --text-coin-counter-dim: #94a3b8;
+
+  /* Borders */
+  --border-hairline: rgba(0, 0, 0, 0.06);
+  --border-faint: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.12);
+  --border-tooltip: #e2e8f0;
+  --border-disabled: #cbd5e1;
+  --border-nav-inactive: #cbd5e1;
+  --border-coin-idle: #cbd5e1;
+  --border-coin-queue: #e2e8f0;
+
+  /* Charts */
+  --chart-grid: #e2e8f0;
+  --chart-axis: #94a3b8;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes flipCoin {
+  0% { transform: rotateY(0) scale(1); }
+  50% { transform: rotateY(90deg) scale(1.2); }
+  100% { transform: rotateY(180deg) scale(1); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(34, 197, 94, 0.15); }
+  50% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+}
+
+.fade-up {
+  animation: fadeUp 0.5s ease both;
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease both;
+}
+
+.pop-in {
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.slide-in {
+  animation: slideIn 0.4s ease both;
+}
+
+.anim-pulse {
+  animation: pulse 1.5s ease infinite;
+}
+
+.anim-glow {
+  animation: glow 2s ease infinite;
+}
+
+.anim-flip-coin {
+  animation: flipCoin 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.anim-pop-in {
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* WIP Game animations */
+
+@keyframes workerBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes blockerPulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(245, 158, 11, 0.15); }
+  50% { box-shadow: 0 0 16px rgba(245, 158, 11, 0.35); }
+}
+
+@keyframes agingGlow {
+  0%, 100% { box-shadow: 0 0 4px rgba(239, 68, 68, 0.1); }
+  50% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.25); }
+}
+
+.anim-worker-bounce {
+  animation: workerBounce 0.6s ease infinite;
+}
+
+.anim-blocker-pulse {
+  animation: blockerPulse 1.5s ease infinite;
+}
+
+.anim-aging-glow {
+  animation: agingGlow 2s ease infinite;
+}

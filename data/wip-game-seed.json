@@ -1,0 +1,202 @@
+{
+  "seedDay": 45,
+  "nextItemId": 52,
+  "items": [
+    {
+      "id": "W-1", "location": "done", "work": { "red": { "required": 5, "done": 5 }, "blue": { "required": 7, "done": 7 }, "green": { "required": 4, "done": 4 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 1, "dayStarted": 2, "dayDone": 12, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-2", "location": "done", "work": { "red": { "required": 6, "done": 6 }, "blue": { "required": 4, "done": 4 }, "green": { "required": 5, "done": 5 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 1, "dayStarted": 2, "dayDone": 14, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-3", "location": "done", "work": { "red": { "required": 4, "done": 4 }, "blue": { "required": 8, "done": 8 }, "green": { "required": 3, "done": 3 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 1, "dayStarted": 3, "dayDone": 15, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-4", "location": "done", "work": { "red": { "required": 7, "done": 7 }, "blue": { "required": 5, "done": 5 }, "green": { "required": 6, "done": 6 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 1, "dayStarted": 5, "dayDone": 18, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-5", "location": "done", "work": { "red": { "required": 3, "done": 3 }, "blue": { "required": 6, "done": 6 }, "green": { "required": 4, "done": 4 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 2, "dayStarted": 5, "dayDone": 16, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-6", "location": "done", "work": { "red": { "required": 8, "done": 8 }, "blue": { "required": 4, "done": 4 }, "green": { "required": 5, "done": 5 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 3, "dayStarted": 7, "dayDone": 20, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-7", "location": "done", "work": { "red": { "required": 5, "done": 5 }, "blue": { "required": 9, "done": 9 }, "green": { "required": 3, "done": 3 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 4, "dayStarted": 8, "dayDone": 22, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-8", "location": "done", "work": { "red": { "required": 4, "done": 4 }, "blue": { "required": 5, "done": 5 }, "green": { "required": 7, "done": 7 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 5, "dayStarted": 9, "dayDone": 23, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-9", "location": "done", "work": { "red": { "required": 6, "done": 6 }, "blue": { "required": 7, "done": 7 }, "green": { "required": 4, "done": 4 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 6, "dayStarted": 10, "dayDone": 25, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-10", "location": "done", "work": { "red": { "required": 5, "done": 5 }, "blue": { "required": 4, "done": 4 }, "green": { "required": 6, "done": 6 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 7, "dayStarted": 11, "dayDone": 24, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-11", "location": "done", "work": { "red": { "required": 9, "done": 9 }, "blue": { "required": 6, "done": 6 }, "green": { "required": 3, "done": 3 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 8, "dayStarted": 12, "dayDone": 28, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-12", "location": "done", "work": { "red": { "required": 4, "done": 4 }, "blue": { "required": 5, "done": 5 }, "green": { "required": 8, "done": 8 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 9, "dayStarted": 14, "dayDone": 29, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-13", "location": "done", "work": { "red": { "required": 6, "done": 6 }, "blue": { "required": 8, "done": 8 }, "green": { "required": 5, "done": 5 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 10, "dayStarted": 15, "dayDone": 31, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-14", "location": "done", "work": { "red": { "required": 5, "done": 5 }, "blue": { "required": 3, "done": 3 }, "green": { "required": 4, "done": 4 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 11, "dayStarted": 16, "dayDone": 28, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-15", "location": "done", "work": { "red": { "required": 7, "done": 7 }, "blue": { "required": 6, "done": 6 }, "green": { "required": 5, "done": 5 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 12, "dayStarted": 17, "dayDone": 33, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-16", "location": "done", "work": { "red": { "required": 4, "done": 4 }, "blue": { "required": 7, "done": 7 }, "green": { "required": 6, "done": 6 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 14, "dayStarted": 18, "dayDone": 34, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-17", "location": "done", "work": { "red": { "required": 6, "done": 6 }, "blue": { "required": 5, "done": 5 }, "green": { "required": 4, "done": 4 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 15, "dayStarted": 20, "dayDone": 35, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-18", "location": "done", "work": { "red": { "required": 5, "done": 5 }, "blue": { "required": 9, "done": 9 }, "green": { "required": 3, "done": 3 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 16, "dayStarted": 21, "dayDone": 37, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-19", "location": "done", "work": { "red": { "required": 8, "done": 8 }, "blue": { "required": 4, "done": 4 }, "green": { "required": 5, "done": 5 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 17, "dayStarted": 22, "dayDone": 38, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-20", "location": "done", "work": { "red": { "required": 4, "done": 4 }, "blue": { "required": 6, "done": 6 }, "green": { "required": 7, "done": 7 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 18, "dayStarted": 23, "dayDone": 39, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-21", "location": "done", "work": { "red": { "required": 6, "done": 6 }, "blue": { "required": 5, "done": 5 }, "green": { "required": 4, "done": 4 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 20, "dayStarted": 25, "dayDone": 40, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-22", "location": "done", "work": { "red": { "required": 5, "done": 5 }, "blue": { "required": 7, "done": 7 }, "green": { "required": 5, "done": 5 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 21, "dayStarted": 26, "dayDone": 42, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-23", "location": "done", "work": { "red": { "required": 7, "done": 7 }, "blue": { "required": 4, "done": 4 }, "green": { "required": 3, "done": 3 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 22, "dayStarted": 27, "dayDone": 41, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-24", "location": "done", "work": { "red": { "required": 4, "done": 4 }, "blue": { "required": 8, "done": 8 }, "green": { "required": 6, "done": 6 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 23, "dayStarted": 28, "dayDone": 44, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-25", "location": "green", "work": { "red": { "required": 6, "done": 6 }, "blue": { "required": 5, "done": 5 }, "green": { "required": 8, "done": 3 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 24, "dayStarted": 29, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-26", "location": "green", "work": { "red": { "required": 5, "done": 5 }, "blue": { "required": 7, "done": 7 }, "green": { "required": 6, "done": 2 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 25, "dayStarted": 30, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-27", "location": "green", "work": { "red": { "required": 7, "done": 7 }, "blue": { "required": 4, "done": 4 }, "green": { "required": 5, "done": 1 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 26, "dayStarted": 31, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-28", "location": "blue-finished", "work": { "red": { "required": 4, "done": 4 }, "blue": { "required": 6, "done": 6 }, "green": { "required": 7, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 27, "dayStarted": 32, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-29", "location": "blue-active", "work": { "red": { "required": 6, "done": 6 }, "blue": { "required": 9, "done": 5 }, "green": { "required": 4, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 28, "dayStarted": 33, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-30", "location": "blue-active", "work": { "red": { "required": 5, "done": 5 }, "blue": { "required": 7, "done": 3 }, "green": { "required": 5, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 29, "dayStarted": 34, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-31", "location": "red-finished", "work": { "red": { "required": 8, "done": 8 }, "blue": { "required": 5, "done": 0 }, "green": { "required": 6, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 30, "dayStarted": 35, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-32", "location": "red-finished", "work": { "red": { "required": 5, "done": 5 }, "blue": { "required": 8, "done": 0 }, "green": { "required": 4, "done": 0 } },
+      "blocked": true, "blockerWork": { "required": 5, "done": 2 }, "dayCreated": 31, "dayStarted": 36, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-33", "location": "red-active", "work": { "red": { "required": 10, "done": 6 }, "blue": { "required": 6, "done": 0 }, "green": { "required": 5, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 32, "dayStarted": 37, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-34", "location": "red-active", "work": { "red": { "required": 7, "done": 3 }, "blue": { "required": 5, "done": 0 }, "green": { "required": 7, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 33, "dayStarted": 39, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-35", "location": "backlog", "work": { "red": { "required": 6, "done": 0 }, "blue": { "required": 4, "done": 0 }, "green": { "required": 5, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 35, "dayStarted": null, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-36", "location": "backlog", "work": { "red": { "required": 5, "done": 0 }, "blue": { "required": 7, "done": 0 }, "green": { "required": 3, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 36, "dayStarted": null, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-37", "location": "backlog", "work": { "red": { "required": 8, "done": 0 }, "blue": { "required": 5, "done": 0 }, "green": { "required": 6, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 38, "dayStarted": null, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-38", "location": "backlog", "work": { "red": { "required": 4, "done": 0 }, "blue": { "required": 6, "done": 0 }, "green": { "required": 8, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 39, "dayStarted": null, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-39", "location": "backlog", "work": { "red": { "required": 7, "done": 0 }, "blue": { "required": 4, "done": 0 }, "green": { "required": 5, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 40, "dayStarted": null, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-40", "location": "backlog", "work": { "red": { "required": 5, "done": 0 }, "blue": { "required": 8, "done": 0 }, "green": { "required": 4, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 42, "dayStarted": null, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-41", "location": "backlog", "work": { "red": { "required": 6, "done": 0 }, "blue": { "required": 5, "done": 0 }, "green": { "required": 6, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 43, "dayStarted": null, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-42", "location": "backlog", "work": { "red": { "required": 4, "done": 0 }, "blue": { "required": 7, "done": 0 }, "green": { "required": 5, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 44, "dayStarted": null, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    },
+    {
+      "id": "W-43", "location": "backlog", "work": { "red": { "required": 9, "done": 0 }, "blue": { "required": 4, "done": 0 }, "green": { "required": 3, "done": 0 } },
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 45, "dayStarted": null, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+    }
+  ],
+  "snapshots": [
+    { "day": 1, "itemsByLocation": { "backlog": 4, "red-active": 0, "red-finished": 0, "blue-active": 0, "blue-finished": 0, "green": 0, "done": 0 }, "wipByColor": { "red": 0, "blue": 0, "green": 0 }, "itemsDone": 0, "totalItems": 4, "avgAge": 0 },
+    { "day": 2, "itemsByLocation": { "backlog": 2, "red-active": 2, "red-finished": 0, "blue-active": 0, "blue-finished": 0, "green": 0, "done": 0 }, "wipByColor": { "red": 2, "blue": 0, "green": 0 }, "itemsDone": 0, "totalItems": 4, "avgAge": 0 },
+    { "day": 3, "itemsByLocation": { "backlog": 2, "red-active": 2, "red-finished": 0, "blue-active": 0, "blue-finished": 0, "green": 0, "done": 0 }, "wipByColor": { "red": 2, "blue": 0, "green": 0 }, "itemsDone": 0, "totalItems": 5, "avgAge": 0.5 },
+    { "day": 5, "itemsByLocation": { "backlog": 2, "red-active": 2, "red-finished": 0, "blue-active": 1, "blue-finished": 0, "green": 0, "done": 0 }, "wipByColor": { "red": 2, "blue": 1, "green": 0 }, "itemsDone": 0, "totalItems": 6, "avgAge": 1.2 },
+    { "day": 7, "itemsByLocation": { "backlog": 1, "red-active": 2, "red-finished": 0, "blue-active": 1, "blue-finished": 1, "green": 0, "done": 0 }, "wipByColor": { "red": 2, "blue": 2, "green": 0 }, "itemsDone": 0, "totalItems": 7, "avgAge": 2.0 },
+    { "day": 10, "itemsByLocation": { "backlog": 1, "red-active": 2, "red-finished": 0, "blue-active": 1, "blue-finished": 0, "green": 1, "done": 2 }, "wipByColor": { "red": 2, "blue": 1, "green": 1 }, "itemsDone": 2, "totalItems": 9, "avgAge": 2.6 },
+    { "day": 12, "itemsByLocation": { "backlog": 1, "red-active": 2, "red-finished": 1, "blue-active": 1, "blue-finished": 0, "green": 1, "done": 4 }, "wipByColor": { "red": 3, "blue": 1, "green": 1 }, "itemsDone": 4, "totalItems": 11, "avgAge": 3.0 },
+    { "day": 15, "itemsByLocation": { "backlog": 1, "red-active": 2, "red-finished": 0, "blue-active": 2, "blue-finished": 0, "green": 1, "done": 6 }, "wipByColor": { "red": 2, "blue": 2, "green": 1 }, "itemsDone": 6, "totalItems": 14, "avgAge": 3.2 },
+    { "day": 18, "itemsByLocation": { "backlog": 1, "red-active": 2, "red-finished": 1, "blue-active": 1, "blue-finished": 1, "green": 1, "done": 8 }, "wipByColor": { "red": 3, "blue": 2, "green": 1 }, "itemsDone": 8, "totalItems": 17, "avgAge": 3.5 },
+    { "day": 20, "itemsByLocation": { "backlog": 2, "red-active": 2, "red-finished": 0, "blue-active": 2, "blue-finished": 0, "green": 2, "done": 10 }, "wipByColor": { "red": 2, "blue": 2, "green": 2 }, "itemsDone": 10, "totalItems": 19, "avgAge": 3.4 },
+    { "day": 22, "itemsByLocation": { "backlog": 2, "red-active": 2, "red-finished": 1, "blue-active": 1, "blue-finished": 1, "green": 1, "done": 12 }, "wipByColor": { "red": 3, "blue": 2, "green": 1 }, "itemsDone": 12, "totalItems": 22, "avgAge": 3.6 },
+    { "day": 25, "itemsByLocation": { "backlog": 2, "red-active": 2, "red-finished": 0, "blue-active": 2, "blue-finished": 1, "green": 1, "done": 14 }, "wipByColor": { "red": 2, "blue": 3, "green": 1 }, "itemsDone": 14, "totalItems": 25, "avgAge": 3.8 },
+    { "day": 28, "itemsByLocation": { "backlog": 2, "red-active": 2, "red-finished": 1, "blue-active": 1, "blue-finished": 1, "green": 2, "done": 16 }, "wipByColor": { "red": 3, "blue": 2, "green": 2 }, "itemsDone": 16, "totalItems": 28, "avgAge": 4.0 },
+    { "day": 30, "itemsByLocation": { "backlog": 3, "red-active": 2, "red-finished": 0, "blue-active": 2, "blue-finished": 0, "green": 2, "done": 18 }, "wipByColor": { "red": 2, "blue": 2, "green": 2 }, "itemsDone": 18, "totalItems": 30, "avgAge": 3.5 },
+    { "day": 33, "itemsByLocation": { "backlog": 3, "red-active": 2, "red-finished": 1, "blue-active": 2, "blue-finished": 0, "green": 2, "done": 20 }, "wipByColor": { "red": 3, "blue": 2, "green": 2 }, "itemsDone": 20, "totalItems": 33, "avgAge": 4.1 },
+    { "day": 35, "itemsByLocation": { "backlog": 4, "red-active": 2, "red-finished": 1, "blue-active": 1, "blue-finished": 1, "green": 2, "done": 21 }, "wipByColor": { "red": 3, "blue": 2, "green": 2 }, "itemsDone": 21, "totalItems": 35, "avgAge": 4.5 },
+    { "day": 37, "itemsByLocation": { "backlog": 4, "red-active": 2, "red-finished": 1, "blue-active": 2, "blue-finished": 0, "green": 3, "done": 22 }, "wipByColor": { "red": 3, "blue": 2, "green": 3 }, "itemsDone": 22, "totalItems": 37, "avgAge": 5.0 },
+    { "day": 39, "itemsByLocation": { "backlog": 5, "red-active": 2, "red-finished": 1, "blue-active": 1, "blue-finished": 1, "green": 3, "done": 23 }, "wipByColor": { "red": 3, "blue": 2, "green": 3 }, "itemsDone": 23, "totalItems": 39, "avgAge": 5.3 },
+    { "day": 40, "itemsByLocation": { "backlog": 6, "red-active": 2, "red-finished": 2, "blue-active": 2, "blue-finished": 0, "green": 3, "done": 23 }, "wipByColor": { "red": 4, "blue": 2, "green": 3 }, "itemsDone": 23, "totalItems": 40, "avgAge": 5.8 },
+    { "day": 42, "itemsByLocation": { "backlog": 7, "red-active": 2, "red-finished": 1, "blue-active": 2, "blue-finished": 1, "green": 3, "done": 23 }, "wipByColor": { "red": 3, "blue": 3, "green": 3 }, "itemsDone": 23, "totalItems": 41, "avgAge": 6.2 },
+    { "day": 43, "itemsByLocation": { "backlog": 8, "red-active": 2, "red-finished": 2, "blue-active": 2, "blue-finished": 1, "green": 3, "done": 24 }, "wipByColor": { "red": 4, "blue": 3, "green": 3 }, "itemsDone": 24, "totalItems": 42, "avgAge": 6.0 },
+    { "day": 45, "itemsByLocation": { "backlog": 9, "red-active": 2, "red-finished": 2, "blue-active": 2, "blue-finished": 1, "green": 3, "done": 24 }, "wipByColor": { "red": 4, "blue": 3, "green": 3 }, "itemsDone": 24, "totalItems": 43, "avgAge": 6.5 }
+  ]
+}
