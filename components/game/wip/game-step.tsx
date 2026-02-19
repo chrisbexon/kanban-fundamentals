@@ -30,6 +30,7 @@ interface WipGameStepProps {
   onUnassignWorker: (id: string) => void;
   onResolve: () => void;
   onAcknowledge: () => void;
+  onPullItem: (id: string) => void;
   onReorderBacklog: (id: string, dir: "up" | "down") => void;
   onUpdateSettings: (s: Partial<WipSettings>) => void;
   onRestart: () => void;
@@ -42,7 +43,7 @@ export function WipGameStep({
   items, workers, day, phase, settings, roundNumber, wipCounts, doneCount,
   selectedWorkerId, assignedWorkerCount, lastResult, events, gameOver,
   onSelectWorker, onClickItem, onUnassignWorker, onResolve, onAcknowledge,
-  onReorderBacklog, onUpdateSettings, onRestart, onAcknowledgeEvent, onFinish, onBack,
+  onPullItem, onReorderBacklog, onUpdateSettings, onRestart, onAcknowledgeEvent, onFinish, onBack,
 }: WipGameStepProps) {
   const unacknowledgedEvents = events.filter((e) => !e.acknowledged);
 
@@ -125,6 +126,7 @@ export function WipGameStep({
         settings={settings}
         selectedWorkerId={phase === "assign" && !gameOver ? selectedWorkerId : null}
         onClickItem={onClickItem}
+        onPullItem={onPullItem}
         onReorderBacklog={onReorderBacklog}
         disabled={phase !== "assign" || gameOver}
       />

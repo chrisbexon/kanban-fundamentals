@@ -128,7 +128,7 @@
     },
     {
       "id": "W-32", "location": "red-finished", "work": { "red": { "required": 5, "done": 5 }, "blue": { "required": 8, "done": 0 }, "green": { "required": 4, "done": 0 } },
-      "blocked": true, "blockerWork": { "required": 5, "done": 2 }, "dayCreated": 31, "dayStarted": 36, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
+      "blocked": false, "blockerWork": { "required": 0, "done": 0 }, "dayCreated": 31, "dayStarted": 36, "dayDone": null, "assignedWorkerIds": [], "class": "standard", "dueDay": null
     },
     {
       "id": "W-33", "location": "red-active", "work": { "red": { "required": 10, "done": 6 }, "blue": { "required": 6, "done": 0 }, "green": { "required": 5, "done": 0 } },

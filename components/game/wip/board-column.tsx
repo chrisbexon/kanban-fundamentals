@@ -2,6 +2,7 @@
 
 import type { WipWorkItem, Worker } from "@/types/wip-game";
 import type { ColumnDef } from "@/lib/constants/wip-game";
+import { STAGE_AFTER, COLUMN_DEFS } from "@/lib/constants/wip-game";
 import { WorkItemCard } from "./work-item-card";
 
 interface BoardColumnProps {
@@ -14,17 +15,25 @@ interface BoardColumnProps {
   enforceWip?: boolean;
   onClickItem?: (id: string) => void;
   assignableItemIds: Set<string>;
+  pullableItemIds: Set<string>;
+  onPullItem: (id: string) => void;
   onReorder?: (itemId: string, dir: "up" | "down") => void;
 }
 
 export function BoardColumn({
   def, items, workers, day, wipCount, wipLimit, enforceWip,
-  onClickItem, assignableItemIds, onReorder,
+  onClickItem, assignableItemIds, pullableItemIds, onPullItem, onReorder,
 }: BoardColumnProps) {
   const isOverWip = wipCount !== undefined && wipLimit !== undefined && enforceWip && wipCount > wipLimit;
   const isAtWip = wipCount !== undefined && wipLimit !== undefined && enforceWip && wipCount === wipLimit;
   const isBacklog = def.location === "backlog";
   const isDone = def.location === "done";
+  const isFinished = def.location === "red-finished" || def.location === "blue-finished";
+
+  // Get destination column color for pull button styling
+  const destColor = isFinished
+    ? COLUMN_DEFS.find((c) => c.location === STAGE_AFTER[def.location as Exclude<typeof def.location, "done">])?.color
+    : undefined;
 
   return (
     <div
@@ -94,15 +103,30 @@ export function BoardColumn({
                   </button>
                 </div>
               )}
-              <div className={isBacklog ? "ml-4" : ""}>
-                <WorkItemCard
-                  item={item}
-                  day={day}
-                  assignedWorkers={itemWorkers}
-                  onClick={canClick ? () => onClickItem?.(item.id) : undefined}
-                  isAssignable={canClick}
-                  compact={isDone}
-                />
+              <div className={`${isBacklog ? "ml-4" : ""} ${isFinished && pullableItemIds.has(item.id) ? "flex items-center gap-1" : ""}`}>
+                <div className="flex-1 min-w-0">
+                  <WorkItemCard
+                    item={item}
+                    day={day}
+                    assignedWorkers={itemWorkers}
+                    onClick={canClick ? () => onClickItem?.(item.id) : undefined}
+                    isAssignable={canClick}
+                    compact={isDone}
+                  />
+                </div>
+                {isFinished && pullableItemIds.has(item.id) && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onPullItem(item.id); }}
+                    className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center border-none cursor-pointer text-[12px] font-bold transition-opacity hover:opacity-80"
+                    style={{
+                      background: `${destColor}20`,
+                      color: destColor,
+                    }}
+                    title={`Pull to ${COLUMN_DEFS.find((c) => c.location === STAGE_AFTER[def.location as Exclude<typeof def.location, "done">])?.label}`}
+                  >
+                    &rarr;
+                  </button>
+                )}
               </div>
             </div>
           );

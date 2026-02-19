@@ -10,6 +10,7 @@ import { loadSeed } from "@/lib/engine/wip-seed-loader";
 import {
   makeWorkers, assignWorker, unassignWorker, resolveRound,
   takeSnapshot, reorderBacklog, stageWip, canAssign, markDoneItems,
+  pullFinishedItem,
 } from "@/lib/engine/wip-game";
 
 export function useWipGame() {
@@ -123,6 +124,12 @@ export function useWipGame() {
     }));
   }, []);
 
+  const handlePullItem = useCallback((itemId: string) => {
+    if (phase !== "assign" || gameOver) return;
+    const result = pullFinishedItem(items, itemId, settings);
+    if (result) setItems(result);
+  }, [phase, gameOver, items, settings]);
+
   const handleReorderBacklog = useCallback((itemId: string, direction: "up" | "down") => {
     if (phase !== "assign") return;
     setItems((prev) => reorderBacklog(prev, itemId, direction));
@@ -177,6 +184,7 @@ export function useWipGame() {
     resolveRound: handleResolveRound,
     acknowledgeRound: handleAcknowledgeRound,
     updateSettings: handleUpdateSettings,
+    pullItem: handlePullItem,
     reorderBacklog: handleReorderBacklog,
     restart: handleRestart,
     acknowledgeEvent: handleAcknowledgeEvent,

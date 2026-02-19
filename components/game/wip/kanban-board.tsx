@@ -2,7 +2,7 @@
 
 import type { WipWorkItem, Worker, WipSettings, WorkColor } from "@/types/wip-game";
 import { COLUMN_DEFS } from "@/lib/constants/wip-game";
-import { stageWip, canAssign } from "@/lib/engine/wip-game";
+import { stageWip, canAssign, canPullFinishedItem } from "@/lib/engine/wip-game";
 import { BoardColumn } from "./board-column";
 
 interface KanbanBoardProps {
@@ -12,13 +12,14 @@ interface KanbanBoardProps {
   settings: WipSettings;
   selectedWorkerId: string | null;
   onClickItem: (id: string) => void;
+  onPullItem: (id: string) => void;
   onReorderBacklog: (itemId: string, dir: "up" | "down") => void;
   disabled: boolean;
 }
 
 export function KanbanBoard({
   items, workers, day, settings, selectedWorkerId,
-  onClickItem, onReorderBacklog, disabled,
+  onClickItem, onPullItem, onReorderBacklog, disabled,
 }: KanbanBoardProps) {
   // Compute which items are assignable if a worker is selected
   const assignableItemIds = new Set<string>();
@@ -29,6 +30,17 @@ export function KanbanBoard({
         if (canAssign(items, item, worker, settings)) {
           assignableItemIds.add(item.id);
         }
+      }
+    }
+  }
+
+  // Compute which finished items can be manually pulled forward
+  const pullableItemIds = new Set<string>();
+  if (!disabled) {
+    for (const item of items) {
+      if ((item.location === "red-finished" || item.location === "blue-finished") &&
+          canPullFinishedItem(items, item.id, settings)) {
+        pullableItemIds.add(item.id);
       }
     }
   }
@@ -63,6 +75,8 @@ export function KanbanBoard({
             enforceWip={def.wipColor ? settings.enforceWip[def.wipColor] : undefined}
             onClickItem={onClickItem}
             assignableItemIds={disabled ? new Set() : assignableItemIds}
+            pullableItemIds={pullableItemIds}
+            onPullItem={onPullItem}
             onReorder={def.location === "backlog" && !disabled ? onReorderBacklog : undefined}
           />
         );

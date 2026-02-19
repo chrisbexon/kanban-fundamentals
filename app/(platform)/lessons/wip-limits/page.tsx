@@ -48,6 +48,7 @@ export default function WipLimitsLesson() {
           onUnassignWorker={game.unassignWorker}
           onResolve={game.resolveRound}
           onAcknowledge={game.acknowledgeRound}
+          onPullItem={game.pullItem}
           onReorderBacklog={game.reorderBacklog}
           onUpdateSettings={game.updateSettings}
           onRestart={game.restart}

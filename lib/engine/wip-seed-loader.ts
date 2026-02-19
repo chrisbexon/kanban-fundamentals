@@ -9,10 +9,21 @@ export interface SeedData {
   snapshots: DaySnapshot[];
 }
 
+const ACTIVE_LOCATIONS = new Set(["red-active", "blue-active", "green"]);
+
 /** Load and parse the seed JSON */
 export function loadSeed(): SeedData {
   const data = seedData as SeedData;
   validateSeed(data);
+
+  // Sanitize: clear blocked state on items not in active columns
+  for (const item of data.items) {
+    if (item.blocked && !ACTIVE_LOCATIONS.has(item.location)) {
+      item.blocked = false;
+      item.blockerWork = { required: 0, done: 0 };
+    }
+  }
+
   return data;
 }
 

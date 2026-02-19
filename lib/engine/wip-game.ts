@@ -480,6 +480,73 @@ export function takeSnapshot(items: WipWorkItem[], day: number): DaySnapshot {
   };
 }
 
+// ─── Manual Pull from Finished ──────────────────────────────
+
+/** Manually pull a finished item to the next active column (respecting WIP limits) */
+export function pullFinishedItem(
+  items: WipWorkItem[],
+  itemId: string,
+  settings: WipSettings,
+): WipWorkItem[] | null {
+  const item = items.find((it) => it.id === itemId);
+  if (!item) return null;
+
+  // Only finished columns can be manually pulled
+  if (item.location !== "red-finished" && item.location !== "blue-finished") return null;
+
+  const target = STAGE_AFTER[item.location]; // blue-active or green
+
+  // Inline WIP check (same logic as canMoveToLocation)
+  if (target !== "done" && target !== "backlog") {
+    for (const color of (["red", "blue", "green"] as WorkColor[])) {
+      const locs = WIP_LOCATIONS[color];
+      if (locs.includes(target)) {
+        if (settings.enforceWip[color]) {
+          const currentWip = items.filter(
+            (it) => it.id !== item.id && locs.includes(it.location),
+          ).length;
+          if (currentWip >= settings.wipLimits[color]) return null;
+        }
+        break;
+      }
+    }
+  }
+
+  return items.map((it) =>
+    it.id === itemId ? { ...it, location: target } : it,
+  );
+}
+
+/** Check if a finished item can be pulled to the next column */
+export function canPullFinishedItem(
+  items: WipWorkItem[],
+  itemId: string,
+  settings: WipSettings,
+): boolean {
+  const item = items.find((it) => it.id === itemId);
+  if (!item) return false;
+  if (item.location !== "red-finished" && item.location !== "blue-finished") return false;
+
+  const target = STAGE_AFTER[item.location];
+
+  if (target !== "done" && target !== "backlog") {
+    for (const color of (["red", "blue", "green"] as WorkColor[])) {
+      const locs = WIP_LOCATIONS[color];
+      if (locs.includes(target)) {
+        if (settings.enforceWip[color]) {
+          const currentWip = items.filter(
+            (it) => it.id !== item.id && locs.includes(it.location),
+          ).length;
+          if (currentWip >= settings.wipLimits[color]) return false;
+        }
+        break;
+      }
+    }
+  }
+
+  return true;
+}
+
 // ─── Backlog Reorder ────────────────────────────────────────
 
 /** Move a backlog item up or down */
