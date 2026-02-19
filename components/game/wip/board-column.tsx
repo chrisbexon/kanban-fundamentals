@@ -29,10 +29,14 @@ export function BoardColumn({
   const isBacklog = def.location === "backlog";
   const isDone = def.location === "done";
   const isFinished = def.location === "red-finished" || def.location === "blue-finished";
+  const isPullableColumn = isFinished || isBacklog;
 
   // Get destination column color for pull button styling
-  const destColor = isFinished
+  const destColor = isPullableColumn && def.location !== "done"
     ? COLUMN_DEFS.find((c) => c.location === STAGE_AFTER[def.location as Exclude<typeof def.location, "done">])?.color
+    : undefined;
+  const destLabel = isPullableColumn && def.location !== "done"
+    ? COLUMN_DEFS.find((c) => c.location === STAGE_AFTER[def.location as Exclude<typeof def.location, "done">])?.label
     : undefined;
 
   return (
@@ -103,7 +107,7 @@ export function BoardColumn({
                   </button>
                 </div>
               )}
-              <div className={`${isBacklog ? "ml-4" : ""} ${isFinished && pullableItemIds.has(item.id) ? "flex items-center gap-1" : ""}`}>
+              <div className={`${isBacklog ? "ml-4" : ""} ${isPullableColumn && pullableItemIds.has(item.id) ? "flex items-center gap-1" : ""}`}>
                 <div className="flex-1 min-w-0">
                   <WorkItemCard
                     item={item}
@@ -114,7 +118,7 @@ export function BoardColumn({
                     compact={isDone}
                   />
                 </div>
-                {isFinished && pullableItemIds.has(item.id) && (
+                {isPullableColumn && pullableItemIds.has(item.id) && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onPullItem(item.id); }}
                     className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center border-none cursor-pointer text-[12px] font-bold transition-opacity hover:opacity-80"
@@ -122,7 +126,7 @@ export function BoardColumn({
                       background: `${destColor}20`,
                       color: destColor,
                     }}
-                    title={`Pull to ${COLUMN_DEFS.find((c) => c.location === STAGE_AFTER[def.location as Exclude<typeof def.location, "done">])?.label}`}
+                    title={`Pull to ${destLabel}`}
                   >
                     &rarr;
                   </button>

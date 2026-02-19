@@ -2,7 +2,7 @@
 
 import type { WipWorkItem, Worker, WipSettings, WorkColor } from "@/types/wip-game";
 import { COLUMN_DEFS } from "@/lib/constants/wip-game";
-import { stageWip, canAssign, canPullFinishedItem } from "@/lib/engine/wip-game";
+import { stageWip, canAssign, canPullFinishedItem, canPullBacklogItem } from "@/lib/engine/wip-game";
 import { BoardColumn } from "./board-column";
 
 interface KanbanBoardProps {
@@ -34,11 +34,14 @@ export function KanbanBoard({
     }
   }
 
-  // Compute which finished items can be manually pulled forward
+  // Compute which items can be manually pulled forward
   const pullableItemIds = new Set<string>();
   if (!disabled) {
+    const backlogPullable = canPullBacklogItem(items, settings);
     for (const item of items) {
-      if ((item.location === "red-finished" || item.location === "blue-finished") &&
+      if (item.location === "backlog" && backlogPullable) {
+        pullableItemIds.add(item.id);
+      } else if ((item.location === "red-finished" || item.location === "blue-finished") &&
           canPullFinishedItem(items, item.id, settings)) {
         pullableItemIds.add(item.id);
       }

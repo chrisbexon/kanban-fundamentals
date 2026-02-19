@@ -547,6 +547,41 @@ export function canPullFinishedItem(
   return true;
 }
 
+// ─── Manual Pull from Backlog ────────────────────────────────
+
+/** Manually pull a backlog item into red-active (respecting WIP limits) */
+export function pullBacklogItem(
+  items: WipWorkItem[],
+  itemId: string,
+  settings: WipSettings,
+  day: number,
+): WipWorkItem[] | null {
+  const item = items.find((it) => it.id === itemId);
+  if (!item || item.location !== "backlog") return null;
+
+  // Check red WIP
+  if (settings.enforceWip.red) {
+    const redWip = stageWip(items, "red");
+    if (redWip >= settings.wipLimits.red) return null;
+  }
+
+  return items.map((it) =>
+    it.id === itemId ? { ...it, location: "red-active" as WipLocation, dayStarted: day } : it,
+  );
+}
+
+/** Check if a backlog item can be pulled into red-active */
+export function canPullBacklogItem(
+  items: WipWorkItem[],
+  settings: WipSettings,
+): boolean {
+  if (settings.enforceWip.red) {
+    const redWip = stageWip(items, "red");
+    if (redWip >= settings.wipLimits.red) return false;
+  }
+  return true;
+}
+
 // ─── Backlog Reorder ────────────────────────────────────────
 
 /** Move a backlog item up or down */
