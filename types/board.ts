@@ -101,6 +101,12 @@ export interface SwimlaneDefinition {
 
   /** Explicit policy for this lane */
   policy: string;
+
+  /**
+   * Each swimlane owns its own columns — different teams or classes of service
+   * may have entirely different workflows. Columns are ordered left → right.
+   */
+  columns: ColumnDefinition[];
 }
 
 export interface ItemTypeDefinition {
@@ -126,6 +132,14 @@ export interface BoardSettings {
 
   /** Days before an item's age is flagged as critical */
   ageCriticalDays: number;
+
+  // ─── Simulation settings ──────────────────────────────────
+
+  /** Average items arriving to backlog per day (default 2) */
+  arrivalRate: number;
+
+  /** Probability per day of an item completing its current active stage (default 0.4) */
+  processingChance: number;
 }
 
 // ─── Work Items ──────────────────────────────────────────────
@@ -233,6 +247,8 @@ export const DEFAULT_BOARD_SETTINGS: BoardSettings = {
   systemWipLimit: null,
   ageWarningDays: 10,
   ageCriticalDays: 15,
+  arrivalRate: 2,
+  processingChance: 0.4,
 };
 
 export const DEFAULT_SWIMLANE: SwimlaneDefinition = {
@@ -242,77 +258,80 @@ export const DEFAULT_SWIMLANE: SwimlaneDefinition = {
   wipLimit: null,
   order: 0,
   policy: "",
+  columns: [],
 };
 
 export function createDefaultBoard(): BoardDefinition {
+  const defaultColumns: ColumnDefinition[] = [
+    {
+      id: "backlog",
+      name: "Backlog",
+      type: "backlog",
+      color: "#64748b",
+      policy: "Items waiting to be committed to the workflow.",
+      wipLimit: null,
+      subColumns: [],
+      width: 1,
+    },
+    {
+      id: "analysis",
+      name: "Analysis",
+      type: "active",
+      color: "#3b82f6",
+      policy: "",
+      wipLimit: 3,
+      subColumns: [
+        { id: "analysis-doing", name: "Doing", type: "active", policy: "" },
+        { id: "analysis-done", name: "Done", type: "queue", policy: "Analysis is complete and documented." },
+      ],
+      width: 1,
+    },
+    {
+      id: "development",
+      name: "Development",
+      type: "active",
+      color: "#8b5cf6",
+      policy: "",
+      wipLimit: 4,
+      subColumns: [
+        { id: "dev-doing", name: "Doing", type: "active", policy: "" },
+        { id: "dev-done", name: "Done", type: "queue", policy: "Code complete, tests passing." },
+      ],
+      width: 1,
+    },
+    {
+      id: "review",
+      name: "Review",
+      type: "active",
+      color: "#f59e0b",
+      policy: "Item has been peer-reviewed and accepted.",
+      wipLimit: 2,
+      subColumns: [],
+      width: 1,
+    },
+    {
+      id: "done",
+      name: "Done",
+      type: "done",
+      color: "#22c55e",
+      policy: "Delivered to customer.",
+      wipLimit: null,
+      subColumns: [],
+      width: 1,
+    },
+  ];
+
   return {
     id: crypto.randomUUID ? crypto.randomUUID() : `board-${Date.now()}`,
     name: "My Kanban Board",
     description: "",
-    columns: [
-      {
-        id: "backlog",
-        name: "Backlog",
-        type: "backlog",
-        color: "#64748b",
-        policy: "Items waiting to be committed to the workflow.",
-        wipLimit: null,
-        subColumns: [],
-        width: 1,
-      },
-      {
-        id: "analysis",
-        name: "Analysis",
-        type: "active",
-        color: "#3b82f6",
-        policy: "",
-        wipLimit: 3,
-        subColumns: [
-          { id: "analysis-doing", name: "Doing", type: "active", policy: "" },
-          { id: "analysis-done", name: "Done", type: "queue", policy: "Analysis is complete and documented." },
-        ],
-        width: 1,
-      },
-      {
-        id: "development",
-        name: "Development",
-        type: "active",
-        color: "#8b5cf6",
-        policy: "",
-        wipLimit: 4,
-        subColumns: [
-          { id: "dev-doing", name: "Doing", type: "active", policy: "" },
-          { id: "dev-done", name: "Done", type: "queue", policy: "Code complete, tests passing." },
-        ],
-        width: 1,
-      },
-      {
-        id: "review",
-        name: "Review",
-        type: "active",
-        color: "#f59e0b",
-        policy: "Item has been peer-reviewed and accepted.",
-        wipLimit: 2,
-        subColumns: [],
-        width: 1,
-      },
-      {
-        id: "done",
-        name: "Done",
-        type: "done",
-        color: "#22c55e",
-        policy: "Delivered to customer.",
-        wipLimit: null,
-        subColumns: [],
-        width: 1,
-      },
-    ],
+    columns: defaultColumns,
     columnGroups: [
       { id: "analysis-group", name: "Analysis", columnIds: ["analysis"], wipLimit: 3 },
       { id: "dev-group", name: "Development", columnIds: ["development"], wipLimit: 4 },
     ],
     swimlanes: [
-      { ...DEFAULT_SWIMLANE },
+      { ...DEFAULT_SWIMLANE, columns: defaultColumns },
     ],
     itemTypes: [
       { id: "story", name: "User Story", color: "#3b82f6", icon: "\u{1F4DD}", defaultSwimlane: null },
@@ -336,6 +355,28 @@ export function createEmptyBoardState(definition?: BoardDefinition): BoardState 
 }
 
 // ─── Computed Helpers (pure functions) ───────────────────────
+
+/**
+ * Get columns for a specific swimlane. Falls back to board.columns
+ * for backward compatibility if the swimlane has no columns.
+ */
+export function getSwimlaneCols(def: BoardDefinition, laneId: string): ColumnDefinition[] {
+  const lane = def.swimlanes.find((l) => l.id === laneId);
+  if (lane && lane.columns.length > 0) return lane.columns;
+  return def.columns;
+}
+
+/**
+ * Sync board.columns from the primary (first) swimlane.
+ * Call this after modifying swimlane columns to keep backward compat.
+ */
+export function syncBoardColumns(def: BoardDefinition): BoardDefinition {
+  const primary = def.swimlanes[0];
+  return {
+    ...def,
+    columns: primary?.columns.length > 0 ? primary.columns : def.columns,
+  };
+}
 
 /** Get the commitment point column (first non-backlog column) */
 export function getCommitmentPoint(def: BoardDefinition): ColumnDefinition | undefined {

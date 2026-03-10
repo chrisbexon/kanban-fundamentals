@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { LessonNav } from "@/components/lesson/lesson-nav";
 import { StepHeader } from "@/components/lesson/step-header";
 import { Card } from "@/components/ui/card";
@@ -105,20 +105,16 @@ interface BoardZone {
   id: string;
   label: string;
   correctElementId: string;
-  x: number;      // % from left
-  y: number;      // % from top
-  width: number;  // % width
-  height: number; // % height
 }
 
 const BOARD_ZONES: BoardZone[] = [
-  { id: "z-start", label: "Start of Workflow", correctElementId: "commitment-point", x: 10.5, y: 12, width: 8, height: 72 },
-  { id: "z-end", label: "End of Workflow", correctElementId: "delivery-point", x: 82.5, y: 12, width: 8, height: 72 },
-  { id: "z-states", label: "Workflow States", correctElementId: "workflow-states", x: 42, y: 18, width: 15, height: 22 },
-  { id: "z-wip", label: "WIP Limits", correctElementId: "wip-control", x: 15, y: 3, width: 68, height: 12 },
-  { id: "z-cards", label: "Work Items", correctElementId: "units-of-value", x: 15, y: 42, width: 14, height: 24 },
-  { id: "z-policy", label: "Policy", correctElementId: "explicit-policies", x: 28, y: 74, width: 14, height: 15 },
-  { id: "z-age", label: "Age Badge", correctElementId: "sle", x: 72, y: 42, width: 11, height: 24 },
+  { id: "z-sle", label: "SLE Banner", correctElementId: "sle" },
+  { id: "z-wip", label: "WIP Limits", correctElementId: "wip-control" },
+  { id: "z-states", label: "Workflow States", correctElementId: "workflow-states" },
+  { id: "z-cards", label: "Work Items", correctElementId: "units-of-value" },
+  { id: "z-policy", label: "Policy", correctElementId: "explicit-policies" },
+  { id: "z-start", label: "Start of Workflow", correctElementId: "commitment-point" },
+  { id: "z-end", label: "End of Workflow", correctElementId: "delivery-point" },
 ];
 
 // ─── Step 1: Elements ────────────────────────────────────────
@@ -254,6 +250,151 @@ interface PlacedLabel {
   zoneId: string;
 }
 
+// ─── Reusable zone target wrapper ────────────────────────────
+
+function ZoneTarget({
+  zoneId,
+  placements,
+  showFeedback,
+  selectedLabel,
+  placedZoneIds,
+  onZoneClick,
+  children,
+  className,
+  vertical,
+  style,
+}: {
+  zoneId: string;
+  placements: PlacedLabel[];
+  showFeedback: boolean;
+  selectedLabel: string | null;
+  placedZoneIds: Set<string>;
+  onZoneClick: (zoneId: string) => void;
+  children: React.ReactNode;
+  className?: string;
+  vertical?: boolean;
+  style?: React.CSSProperties;
+}) {
+  const placement = placements.find((p) => p.zoneId === zoneId);
+  const element = placement ? ELEMENTS.find((e) => e.id === placement.elementId) : null;
+  const zone = BOARD_ZONES.find((z) => z.id === zoneId)!;
+  const isCorrect = showFeedback && element && zone.correctElementId === element.id;
+  const isWrong = showFeedback && element && zone.correctElementId !== element.id;
+  const isTarget = selectedLabel && !placedZoneIds.has(zoneId);
+
+  return (
+    <button
+      onClick={() => onZoneClick(zoneId)}
+      className={`block w-full text-left border-none cursor-pointer rounded-lg transition-all relative ${className || ""}`}
+      style={{
+        background: element
+          ? isCorrect
+            ? "rgba(34,197,94,0.12)"
+            : isWrong
+            ? "rgba(239,68,68,0.12)"
+            : `${element.color}08`
+          : isTarget
+          ? "rgba(59,130,246,0.06)"
+          : "transparent",
+        outline: element
+          ? isCorrect
+            ? "2px solid rgba(34,197,94,0.5)"
+            : isWrong
+            ? "2px solid rgba(239,68,68,0.5)"
+            : `2px solid ${element.color}40`
+          : isTarget
+          ? "2px dashed rgba(59,130,246,0.3)"
+          : "2px solid transparent",
+        outlineOffset: "1px",
+        padding: className ? undefined : "0",
+        ...style,
+      }}
+    >
+      {children}
+      {element && (
+        <div
+          className={`absolute ${vertical ? "top-1/2 -translate-y-1/2 -right-1 translate-x-full" : "-top-0.5 left-1/2 -translate-x-1/2 -translate-y-full"} whitespace-nowrap z-20`}
+        >
+          <div
+            className="text-[8px] font-bold px-1.5 py-0.5 rounded-md shadow-sm"
+            style={{
+              background: isCorrect ? "rgba(34,197,94,0.9)" : isWrong ? "rgba(239,68,68,0.9)" : element.color,
+              color: "#fff",
+            }}
+          >
+            {element.icon} {element.label}
+            {isCorrect && " \u2713"}
+            {isWrong && " \u2717"}
+          </div>
+        </div>
+      )}
+    </button>
+  );
+}
+
+// ─── Card renderer helper ────────────────────────────────────
+
+function renderCards(col: BoardCol) {
+  return (
+    <>
+      {Array.from({ length: Math.min(col.items, 3) }).map((_, i) => {
+        const age = col.id === "green" && i === 0 ? 14 : col.id === "green" && i === 1 ? 9 : null;
+        const isBlocked = col.id === "blue-active" && i === 1;
+        return (
+          <div
+            key={i}
+            className="rounded-md px-1 py-0.5 text-[7px] font-mono"
+            style={{
+              background: "var(--bg-surface)",
+              border: age && age > 12
+                ? "1px solid rgba(239,68,68,0.4)"
+                : age && age > 8
+                ? "1px solid rgba(245,158,11,0.4)"
+                : "1px solid var(--border-faint)",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span style={{ color: "var(--text-muted)" }}>W-{col.id === "done" ? 10 + i : 25 + i}</span>
+              {age !== null && (
+                <span
+                  className="text-[6px] font-bold px-0.5 rounded"
+                  style={{
+                    background: age > 12 ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)",
+                    color: age > 12 ? "#ef4444" : "#f59e0b",
+                  }}
+                >
+                  {age}d
+                </span>
+              )}
+              {isBlocked && (
+                <span
+                  className="text-[6px] font-bold px-0.5 rounded"
+                  style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}
+                >
+                  BLK
+                </span>
+              )}
+            </div>
+            <div className="flex gap-0.5 mt-0.5">
+              <div className="h-0.5 flex-1 rounded-full" style={{ background: `${col.color}30` }}>
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: col.id === "done" ? "100%" : `${40 + i * 20}%`, background: col.color }}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      })}
+      {col.items > 3 && (
+        <div className="text-[7px] text-center" style={{ color: "var(--text-muted)" }}>
+          +{col.items - 3} more
+        </div>
+      )}
+    </>
+  );
+}
+
 function IdentifyStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const [placements, setPlacements] = useState<PlacedLabel[]>([]);
@@ -314,189 +455,271 @@ function IdentifyStep({ onNext, onBack }: { onNext: () => void; onBack: () => vo
         3. Place all seven, then check your answers.
       </div>
 
-      {/* Board Visualisation */}
+      {/* Board Visualisation — each section is a clickable zone */}
       <div
-        className="rounded-xl p-3 mb-4 relative"
+        className="rounded-xl p-3 mb-4"
         style={{ background: "var(--bg-surface)", border: "1px solid var(--border-faint)" }}
       >
-        {/* Row 1: WIP Group Headers spanning colour stages */}
-        <div className="grid grid-cols-7 gap-1 mb-1">
-          {WIP_GROUPS.map((group, gi) => {
-            if (group === null) return null;
-            return (
-              <div
-                key={gi}
-                className="rounded-t-lg px-2 py-1 text-center"
-                style={{
-                  gridColumn: `${gi + 1} / span ${group.colSpan}`,
-                  background: `${group.color}08`,
-                  borderTop: `2px solid ${group.color}30`,
-                  borderLeft: `1px solid ${group.color}15`,
-                  borderRight: `1px solid ${group.color}15`,
-                }}
-              >
-                <div className="text-[9px] font-bold" style={{ color: group.color }}>{group.label}</div>
-                <div
-                  className="text-[9px] font-bold font-mono"
-                  style={{ color: group.wipCount >= group.wipLimit ? "#ef4444" : "var(--text-muted)" }}
-                >
-                  WIP {group.wipCount}/{group.wipLimit}
+        {/* SLE Banner — own area above the board */}
+        <ZoneTarget
+          zoneId="z-sle"
+          placements={placements}
+          showFeedback={showFeedback}
+          selectedLabel={selectedLabel}
+          placedZoneIds={placedZoneIds}
+          onZoneClick={handleZoneClick}
+        >
+          <div
+            className="rounded-lg px-3 py-2 mb-3 flex items-center justify-between"
+            style={{ background: "rgba(6,182,212,0.06)", border: "1px solid rgba(6,182,212,0.15)" }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm">{"\u{23F1}\uFE0F"}</span>
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "#06b6d4" }}>
+                  Service Level Expectation
+                </div>
+                <div className="text-[11px] font-bold" style={{ color: "var(--text-primary)" }}>
+                  85% of items within <span style={{ color: "#06b6d4" }}>12 days</span>
                 </div>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full" style={{ background: "#22c55e" }} />
+                <span className="text-[8px]" style={{ color: "var(--text-muted)" }}>&lt;8d</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full" style={{ background: "#f59e0b" }} />
+                <span className="text-[8px]" style={{ color: "var(--text-muted)" }}>8-12d</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full" style={{ background: "#ef4444" }} />
+                <span className="text-[8px]" style={{ color: "var(--text-muted)" }}>&gt;12d</span>
+              </div>
+            </div>
+          </div>
+        </ZoneTarget>
+
+        {/* WIP Group Headers — flex layout for proper alignment */}
+        <ZoneTarget
+          zoneId="z-wip"
+          placements={placements}
+          showFeedback={showFeedback}
+          selectedLabel={selectedLabel}
+          placedZoneIds={placedZoneIds}
+          onZoneClick={handleZoneClick}
+        >
+          <div className="flex gap-1 mb-1">
+            {/* Backlog spacer */}
+            <div className="flex-1" />
+            {/* Red group: spans 2 columns */}
+            <div
+              className="flex-[2] rounded-t-lg px-2 py-1.5 text-center"
+              style={{
+                background: "rgba(239,68,68,0.05)",
+                borderTop: "2px solid rgba(239,68,68,0.3)",
+                borderLeft: "1px solid rgba(239,68,68,0.15)",
+                borderRight: "1px solid rgba(239,68,68,0.15)",
+              }}
+            >
+              <div className="text-[9px] font-bold" style={{ color: "#ef4444" }}>Red</div>
+              <div className="text-[9px] font-bold font-mono" style={{ color: "#ef4444" }}>WIP 4/4</div>
+            </div>
+            {/* Blue group: spans 2 columns */}
+            <div
+              className="flex-[2] rounded-t-lg px-2 py-1.5 text-center"
+              style={{
+                background: "rgba(59,130,246,0.05)",
+                borderTop: "2px solid rgba(59,130,246,0.3)",
+                borderLeft: "1px solid rgba(59,130,246,0.15)",
+                borderRight: "1px solid rgba(59,130,246,0.15)",
+              }}
+            >
+              <div className="text-[9px] font-bold" style={{ color: "#3b82f6" }}>Blue</div>
+              <div className="text-[9px] font-bold font-mono" style={{ color: "var(--text-muted)" }}>WIP 3/4</div>
+            </div>
+            {/* Green group: 1 column */}
+            <div
+              className="flex-1 rounded-t-lg px-2 py-1.5 text-center"
+              style={{
+                background: "rgba(34,197,94,0.05)",
+                borderTop: "2px solid rgba(34,197,94,0.3)",
+                borderLeft: "1px solid rgba(34,197,94,0.15)",
+                borderRight: "1px solid rgba(34,197,94,0.15)",
+              }}
+            >
+              <div className="text-[9px] font-bold" style={{ color: "#22c55e" }}>Green</div>
+              <div className="text-[9px] font-bold font-mono" style={{ color: "#ef4444" }}>WIP 3/3</div>
+            </div>
+            {/* Done spacer */}
+            <div className="flex-1" />
+          </div>
+        </ZoneTarget>
+
+        {/* Column headers — zone for Workflow States */}
+        <ZoneTarget
+          zoneId="z-states"
+          placements={placements}
+          showFeedback={showFeedback}
+          selectedLabel={selectedLabel}
+          placedZoneIds={placedZoneIds}
+          onZoneClick={handleZoneClick}
+        >
+          <div className="flex gap-1 mb-1">
+            {BOARD_COLUMNS.map((col) => (
+              <div
+                key={col.id}
+                className="flex-1 rounded-lg px-1 py-1.5 text-center"
+                style={{ background: `${col.color}10`, border: `1px solid ${col.color}20` }}
+              >
+                <div className="text-[9px] font-bold leading-tight" style={{ color: col.color }}>{col.label}</div>
+              </div>
+            ))}
+          </div>
+        </ZoneTarget>
+
+        {/* Card bodies with start/end workflow markers as separate rows */}
+        <div className="flex gap-1" style={{ minHeight: 180 }}>
+          {BOARD_COLUMNS.map((col, ci) => {
+            // Start of Workflow marker column
+            const startMarker = ci === 1 && (
+              <ZoneTarget
+                key="z-start-marker"
+                zoneId="z-start"
+                placements={placements}
+                showFeedback={showFeedback}
+                selectedLabel={selectedLabel}
+                placedZoneIds={placedZoneIds}
+                onZoneClick={handleZoneClick}
+                className="flex-shrink-0 flex flex-col items-center justify-center rounded-lg"
+                style={{ width: 28 }}
+              >
+                <div className="w-0.5 flex-1 rounded-full" style={{ background: "#22c55e" }} />
+                <div
+                  className="text-[7px] font-bold py-1 text-center leading-tight"
+                  style={{ color: "#22c55e", writingMode: "vertical-rl", textOrientation: "mixed" }}
+                >
+                  START
+                </div>
+                <div className="w-0.5 flex-1 rounded-full" style={{ background: "#22c55e" }} />
+              </ZoneTarget>
+            );
+
+            // End of Workflow marker column
+            const endMarker = ci === 6 && (
+              <ZoneTarget
+                key="z-end-marker"
+                zoneId="z-end"
+                placements={placements}
+                showFeedback={showFeedback}
+                selectedLabel={selectedLabel}
+                placedZoneIds={placedZoneIds}
+                onZoneClick={handleZoneClick}
+                className="flex-shrink-0 flex flex-col items-center justify-center rounded-lg"
+                style={{ width: 28 }}
+              >
+                <div className="w-0.5 flex-1 rounded-full" style={{ background: "#22c55e" }} />
+                <div
+                  className="text-[7px] font-bold py-1 text-center leading-tight"
+                  style={{ color: "#22c55e", writingMode: "vertical-rl", textOrientation: "mixed" }}
+                >
+                  END
+                </div>
+                <div className="w-0.5 flex-1 rounded-full" style={{ background: "#22c55e" }} />
+              </ZoneTarget>
+            );
+
+            const cardColumn = ci === 1 ? (
+              <ZoneTarget
+                key={`body-${col.id}`}
+                zoneId="z-cards"
+                placements={placements}
+                showFeedback={showFeedback}
+                selectedLabel={selectedLabel}
+                placedZoneIds={placedZoneIds}
+                onZoneClick={handleZoneClick}
+                className="flex-1"
+              >
+                <div
+                  className="rounded-lg p-1 flex flex-col gap-1 h-full"
+                  style={{ background: `${col.color}05`, border: `1px solid ${col.color}10` }}
+                >
+                  {renderCards(col)}
+                </div>
+              </ZoneTarget>
+            ) : (
+              <div
+                key={`body-${col.id}`}
+                className="flex-1 rounded-lg p-1 flex flex-col gap-1"
+                style={{ background: `${col.color}05`, border: `1px solid ${col.color}10` }}
+              >
+                {renderCards(col)}
+              </div>
+            );
+
+            return (
+              <React.Fragment key={col.id}>
+                {startMarker}
+                {endMarker}
+                {cardColumn}
+              </React.Fragment>
             );
           })}
         </div>
 
-        {/* Row 2: Column headers */}
-        <div className="grid grid-cols-7 gap-1 mb-1">
-          {BOARD_COLUMNS.map((col) => (
-            <div
-              key={col.id}
-              className="rounded-lg px-1 py-1 text-center"
-              style={{ background: `${col.color}10`, border: `1px solid ${col.color}20` }}
-            >
-              <div className="text-[9px] font-bold leading-tight" style={{ color: col.color }}>{col.label}</div>
-            </div>
-          ))}
-        </div>
+        {/* Policy text row */}
+        <div className="flex gap-1 mt-1">
+          {BOARD_COLUMNS.map((col, ci) => {
+            // Spacers matching the start/end marker widths
+            const startSpacer = ci === 1 && <div key="sp-start" style={{ width: 28 }} className="flex-shrink-0" />;
+            const endSpacer = ci === 6 && <div key="sp-end" style={{ width: 28 }} className="flex-shrink-0" />;
 
-        {/* Row 3: Column bodies with cards */}
-        <div className="grid grid-cols-7 gap-1" style={{ minHeight: 140 }}>
-          {BOARD_COLUMNS.map((col) => (
-            <div
-              key={`body-${col.id}`}
-              className="rounded-lg p-1 flex flex-col gap-1"
-              style={{ background: `${col.color}05`, border: `1px solid ${col.color}10` }}
-            >
-              {Array.from({ length: Math.min(col.items, 3) }).map((_, i) => {
-                const age = col.id === "green" && i === 0 ? 14 : col.id === "green" && i === 1 ? 9 : null;
-                const isBlocked = col.id === "blue-active" && i === 1;
-                return (
+            const policyContent = col.policy ? (
+              ci === 2 ? (
+                <ZoneTarget
+                  key={`pol-${col.id}`}
+                  zoneId="z-policy"
+                  placements={placements}
+                  showFeedback={showFeedback}
+                  selectedLabel={selectedLabel}
+                  placedZoneIds={placedZoneIds}
+                  onZoneClick={handleZoneClick}
+                  className="flex-1"
+                >
                   <div
-                    key={i}
-                    className="rounded-md px-1 py-0.5 text-[7px] font-mono"
-                    style={{
-                      background: "var(--bg-surface)",
-                      border: age && age > 12
-                        ? "1px solid rgba(239,68,68,0.4)"
-                        : age && age > 8
-                        ? "1px solid rgba(245,158,11,0.4)"
-                        : "1px solid var(--border-faint)",
-                    }}
+                    className="text-[7px] leading-tight rounded px-1 py-1 text-center"
+                    style={{ color: "var(--text-muted)", background: `${col.color}06`, border: `1px dashed ${col.color}15` }}
                   >
-                    <div className="flex items-center justify-between">
-                      <span style={{ color: "var(--text-muted)" }}>W-{col.id === "done" ? 10 + i : 25 + i}</span>
-                      {age !== null && (
-                        <span
-                          className="text-[6px] font-bold px-0.5 rounded"
-                          style={{
-                            background: age > 12 ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)",
-                            color: age > 12 ? "#ef4444" : "#f59e0b",
-                          }}
-                        >
-                          {age}d
-                        </span>
-                      )}
-                      {isBlocked && (
-                        <span
-                          className="text-[6px] font-bold px-0.5 rounded"
-                          style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}
-                        >
-                          BLK
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex gap-0.5 mt-0.5">
-                      <div className="h-0.5 flex-1 rounded-full" style={{ background: `${col.color}30` }}>
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: col.id === "done" ? "100%" : `${40 + i * 20}%`, background: col.color }}
-                        />
-                      </div>
-                    </div>
+                    {col.policy}
                   </div>
-                );
-              })}
-              {col.items > 3 && (
-                <div className="text-[7px] text-center" style={{ color: "var(--text-muted)" }}>
-                  +{col.items - 3} more
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Row 4: Policy text at bottom of each workflow column */}
-        <div className="grid grid-cols-7 gap-1 mt-1">
-          {BOARD_COLUMNS.map((col) => (
-            <div key={`pol-${col.id}`} className="text-center px-0.5">
-              {col.policy && (
+                </ZoneTarget>
+              ) : (
                 <div
-                  className="text-[7px] leading-tight rounded px-1 py-0.5"
-                  style={{ color: "var(--text-muted)", background: `${col.color}06`, border: `1px dashed ${col.color}15` }}
+                  key={`pol-${col.id}`}
+                  className="flex-1 text-center px-0.5"
                 >
-                  {col.policy}
+                  <div
+                    className="text-[7px] leading-tight rounded px-1 py-1"
+                    style={{ color: "var(--text-muted)", background: `${col.color}06`, border: `1px dashed ${col.color}15` }}
+                  >
+                    {col.policy}
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+              )
+            ) : (
+              <div key={`pol-${col.id}`} className="flex-1" />
+            );
+
+            return (
+              <React.Fragment key={col.id}>
+                {startSpacer}
+                {endSpacer}
+                {policyContent}
+              </React.Fragment>
+            );
+          })}
         </div>
-
-        {/* Clickable overlay zones */}
-        {BOARD_ZONES.map((zone) => {
-          const placement = placements.find((p) => p.zoneId === zone.id);
-          const element = placement ? ELEMENTS.find((e) => e.id === placement.elementId) : null;
-          const isCorrect = showFeedback && element && zone.correctElementId === element.id;
-          const isWrong = showFeedback && element && zone.correctElementId !== element.id;
-          const isTarget = selectedLabel && !placedZoneIds.has(zone.id);
-
-          return (
-            <button
-              key={zone.id}
-              onClick={() => handleZoneClick(zone.id)}
-              className="absolute rounded-lg transition-all border-none cursor-pointer flex items-start justify-center pt-0.5"
-              style={{
-                left: `${zone.x}%`,
-                top: `${zone.y}%`,
-                width: `${zone.width}%`,
-                height: `${zone.height}%`,
-                background: element
-                  ? isCorrect
-                    ? "rgba(34,197,94,0.15)"
-                    : isWrong
-                    ? "rgba(239,68,68,0.15)"
-                    : `${element.color}12`
-                  : isTarget
-                  ? "rgba(59,130,246,0.08)"
-                  : "transparent",
-                border: element
-                  ? isCorrect
-                    ? "2px solid rgba(34,197,94,0.5)"
-                    : isWrong
-                    ? "2px solid rgba(239,68,68,0.5)"
-                    : `2px solid ${element.color}40`
-                  : isTarget
-                  ? "2px dashed rgba(59,130,246,0.3)"
-                  : "2px solid transparent",
-                zIndex: 10,
-              }}
-            >
-              {element && (
-                <div
-                  className="text-[8px] font-bold px-1 py-0.5 rounded-md inline-block whitespace-nowrap"
-                  style={{
-                    background: isCorrect ? "rgba(34,197,94,0.2)" : isWrong ? "rgba(239,68,68,0.2)" : `${element.color}15`,
-                    color: isCorrect ? "#22c55e" : isWrong ? "#ef4444" : element.color,
-                  }}
-                >
-                  {element.icon} {element.label}
-                  {isCorrect && " \u2713"}
-                  {isWrong && " \u2717"}
-                </div>
-              )}
-            </button>
-          );
-        })}
       </div>
 
       {/* Label Palette */}
