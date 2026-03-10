@@ -12,13 +12,12 @@ interface RoundControlsProps {
   totalWorkers: number;
   gameOver: boolean;
   onResolve: () => void;
-  onAcknowledge: () => void;
   onFinish: () => void;
 }
 
 export function RoundControls({
   day, phase, roundNumber, assignedWorkerCount, totalWorkers,
-  gameOver, onResolve, onAcknowledge, onFinish,
+  gameOver, onResolve, onFinish,
 }: RoundControlsProps) {
   const pct = Math.round(((day - SEED_DAYS) / PLAYABLE_ROUNDS) * 100);
 
@@ -57,24 +56,20 @@ export function RoundControls({
       <div
         className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider"
         style={{
-          background: phase === "assign" ? "rgba(59,130,246,0.1)" : "rgba(139,92,246,0.1)",
-          color: phase === "assign" ? "#60a5fa" : "#a78bfa",
-          border: phase === "assign" ? "1px solid rgba(59,130,246,0.2)" : "1px solid rgba(139,92,246,0.2)",
+          background: "rgba(59,130,246,0.1)",
+          color: "#60a5fa",
+          border: "1px solid rgba(59,130,246,0.2)",
         }}
       >
-        {phase === "assign" ? `Assign Workers (${assignedWorkerCount}/${totalWorkers})` : "Review Results"}
+        {`Assign Workers (${assignedWorkerCount}/${totalWorkers})`}
       </div>
 
       {/* Action button */}
       {gameOver ? (
         <Btn primary onClick={onFinish}>View Results &rarr;</Btn>
-      ) : phase === "assign" ? (
+      ) : (
         <Btn primary onClick={onResolve}>
           Resolve Day {day + 1} &rarr;
-        </Btn>
-      ) : (
-        <Btn primary onClick={onAcknowledge}>
-          Next Round &rarr;
         </Btn>
       )}
     </div>

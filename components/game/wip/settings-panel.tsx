@@ -8,6 +8,7 @@ interface SettingsPanelProps {
   settings: WipSettings;
   onUpdate: (s: Partial<WipSettings>) => void;
   onRestart: () => void;
+  locked?: boolean;
 }
 
 function WipLimitRow({ color, label, settings, onUpdate }: {
@@ -61,19 +62,57 @@ function WipLimitRow({ color, label, settings, onUpdate }: {
   );
 }
 
-export function SettingsPanel({ settings, onUpdate, onRestart }: SettingsPanelProps) {
+export function SettingsPanel({ settings, onUpdate, onRestart, locked }: SettingsPanelProps) {
   return (
     <div
       className="rounded-xl p-3.5 mb-3"
-      style={{ background: "var(--bg-surface)", border: "1px solid var(--border-faint)" }}
+      style={{
+        background: "var(--bg-surface)",
+        border: locked ? "1px solid var(--border-faint)" : "1px solid rgba(139,92,246,0.2)",
+        opacity: locked ? 0.6 : 1,
+        pointerEvents: locked ? "none" : "auto",
+      }}
     >
       <div className="text-[10px] font-bold uppercase tracking-[1.5px] mb-2 flex items-center gap-2" style={{ color: "var(--text-tertiary)" }}>
         <span className="w-1.5 h-1.5 rounded-full bg-violet-500 inline-block" />
         WIP Limits
+        {locked && <span className="text-[9px] font-normal ml-1" style={{ color: "var(--text-faint)" }}>(unlocked in Round 2)</span>}
       </div>
       <WipLimitRow color="red" label="Red" settings={settings} onUpdate={onUpdate} />
       <WipLimitRow color="blue" label="Blue" settings={settings} onUpdate={onUpdate} />
       <WipLimitRow color="green" label="Green" settings={settings} onUpdate={onUpdate} />
+
+      {/* SLE setting */}
+      <div className="mt-2 pt-2 border-t" style={{ borderColor: "var(--border-hairline)" }}>
+        <div className="text-[10px] font-bold uppercase tracking-[1.5px] mb-2 flex items-center gap-2" style={{ color: "var(--text-tertiary)" }}>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+          SLE (days)
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onUpdate({ sleDays: Math.max(3, settings.sleDays - 1) })}
+            className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold cursor-pointer border-none"
+            style={{ background: "var(--bg-interactive)", color: "var(--text-secondary)" }}
+          >
+            -
+          </button>
+          <div
+            className="w-8 h-6 rounded flex items-center justify-center text-xs font-bold font-mono"
+            style={{ background: "var(--bg-progress-track)", color: "#22c55e" }}
+          >
+            {settings.sleDays}
+          </div>
+          <button
+            onClick={() => onUpdate({ sleDays: Math.min(30, settings.sleDays + 1) })}
+            className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold cursor-pointer border-none"
+            style={{ background: "var(--bg-interactive)", color: "var(--text-secondary)" }}
+          >
+            +
+          </button>
+          <span className="text-[9px] ml-1" style={{ color: "var(--text-muted)" }}>p85 cycle time</span>
+        </div>
+      </div>
+
       <div className="mt-2 pt-2 border-t" style={{ borderColor: "var(--border-hairline)" }}>
         <Btn small onClick={onRestart}>Restart Game</Btn>
       </div>

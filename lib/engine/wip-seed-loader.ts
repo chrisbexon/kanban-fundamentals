@@ -13,7 +13,7 @@ const ACTIVE_LOCATIONS = new Set(["red-active", "blue-active", "green"]);
 
 /** Load and parse the seed JSON */
 export function loadSeed(): SeedData {
-  const data = seedData as SeedData;
+  const data = seedData as unknown as SeedData;
   validateSeed(data);
 
   // Sanitize: clear blocked state on items not in active columns
@@ -21,6 +21,13 @@ export function loadSeed(): SeedData {
     if (item.blocked && !ACTIVE_LOCATIONS.has(item.location)) {
       item.blocked = false;
       item.blockerWork = { required: 0, done: 0 };
+    }
+  }
+
+  // Ensure snapshots have round field (seed data predates rounds)
+  for (const snap of data.snapshots) {
+    if (snap.round === undefined) {
+      (snap as DaySnapshot).round = 1;
     }
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
-import type { WipWorkItem, Worker, WipSettings, RoundResult, GameEvent, RoundPhase, WorkColor } from "@/types/wip-game";
+import { useState } from "react";
+import type { WipWorkItem, Worker, WipSettings, DaySnapshot, RoundResult, GameEvent, RoundPhase, WorkColor } from "@/types/wip-game";
 import { STAGE_COLORS } from "@/lib/constants/wip-game";
 import { StepHeader } from "@/components/lesson/step-header";
 import { Btn } from "@/components/ui/button";
@@ -10,6 +11,34 @@ import { RoundControls } from "./round-controls";
 import { RoundSummary } from "./round-summary";
 import { SettingsPanel } from "./settings-panel";
 import { EventBanner } from "./event-banner";
+import { LiveChartsPanel } from "./live-charts-panel";
+import { TotalAgeIndicator } from "./total-age-indicator";
+
+type ViewMode = "board" | "charts";
+
+const ROUND_DESCRIPTIONS: Record<number, { tag: string; tagColor: string; title: string; desc: string }> = {
+  1: {
+    tag: "Round 1 \u2014 Free Play",
+    tagColor: "#3b82f6",
+    title: "Learn the Board",
+    desc: "Assign workers, pull items, and resolve rounds. Get a feel for how work flows through the system.",
+  },
+  2: {
+    tag: "Round 2 \u2014 WIP Limits",
+    tagColor: "#8b5cf6",
+    title: "Experiment with WIP Limits",
+    desc: "Change the WIP limits in settings. Lower them and watch cycle times. Raise them and see what happens to flow.",
+  },
+  3: {
+    tag: "Round 3 \u2014 Total Age",
+    tagColor: "#f59e0b",
+    title: "Control by Work Item Age",
+    desc: "Keep total work item age below the target. Stop starting, start finishing.",
+  },
+};
+
+/** Target total age for round 3 (sum of all active item ages) */
+const TOTAL_AGE_TARGET = 60;
 
 interface WipGameStepProps {
   items: WipWorkItem[];
@@ -17,6 +46,7 @@ interface WipGameStepProps {
   day: number;
   phase: RoundPhase;
   settings: WipSettings;
+  snapshots: DaySnapshot[];
   roundNumber: number;
   wipCounts: Record<WorkColor, number>;
   doneCount: number;
@@ -25,6 +55,8 @@ interface WipGameStepProps {
   lastResult: RoundResult | null;
   events: GameEvent[];
   gameOver: boolean;
+  gameRound: number;
+  totalAge: number;
   onSelectWorker: (id: string) => void;
   onClickItem: (id: string) => void;
   onUnassignWorker: (id: string) => void;
@@ -40,28 +72,38 @@ interface WipGameStepProps {
 }
 
 export function WipGameStep({
-  items, workers, day, phase, settings, roundNumber, wipCounts, doneCount,
+  items, workers, day, phase, settings, snapshots, roundNumber, wipCounts, doneCount,
   selectedWorkerId, assignedWorkerCount, lastResult, events, gameOver,
+  gameRound, totalAge,
   onSelectWorker, onClickItem, onUnassignWorker, onResolve, onAcknowledge,
   onPullItem, onReorderBacklog, onUpdateSettings, onRestart, onAcknowledgeEvent, onFinish, onBack,
 }: WipGameStepProps) {
   const unacknowledgedEvents = events.filter((e) => !e.acknowledged);
+  const [view, setView] = useState<ViewMode>("board");
+
+  const roundInfo = ROUND_DESCRIPTIONS[gameRound] ?? ROUND_DESCRIPTIONS[1];
+  const settingsLocked = gameRound === 1; // Round 1: default limits, no changes
 
   return (
     <div className="fade-up">
       <StepHeader
-        tag="Simulation"
-        tagColor="#8b5cf6"
-        title="WIP Limits & Work Item Age"
+        tag={roundInfo.tag}
+        tagColor={roundInfo.tagColor}
+        title={gameOver ? "Round Complete!" : roundInfo.title}
         desc={gameOver
-          ? "Game complete! Review your results."
-          : `Day ${day} \u2014 Assign workers to items, then resolve the round.`}
+          ? "Review your results, then continue."
+          : `Day ${day} \u2014 ${roundInfo.desc}`}
       />
 
       {/* Unacknowledged events */}
       {unacknowledgedEvents.map((evt) => (
         <EventBanner key={evt.id} event={evt} onAcknowledge={() => onAcknowledgeEvent(evt.id)} />
       ))}
+
+      {/* Total Age indicator for round 3 */}
+      {gameRound === 3 && !gameOver && (
+        <TotalAgeIndicator totalAge={totalAge} targetAge={TOTAL_AGE_TARGET} />
+      )}
 
       {/* Stats bar */}
       <div className="flex flex-wrap gap-2 mb-3">
@@ -97,42 +139,83 @@ export function WipGameStep({
         totalWorkers={workers.length}
         gameOver={gameOver}
         onResolve={onResolve}
-        onAcknowledge={onAcknowledge}
         onFinish={onFinish}
       />
 
       {/* Round result summary */}
-      {phase === "resolve" && lastResult && (
+      {lastResult && (
         <RoundSummary result={lastResult} workers={workers} />
       )}
 
-      {/* Settings + Worker pool side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-3 mb-3">
-        <SettingsPanel settings={settings} onUpdate={onUpdateSettings} onRestart={onRestart} />
-        <WorkerPool
-          workers={workers}
-          selectedWorkerId={selectedWorkerId}
-          onSelectWorker={onSelectWorker}
-          onUnassignWorker={onUnassignWorker}
-          disabled={phase !== "assign" || gameOver}
-        />
+      {/* View toggle: Board / Charts */}
+      <div className="flex gap-1 mb-3">
+        <button
+          onClick={() => setView("board")}
+          className="px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+          style={{
+            background: view === "board" ? "rgba(59,130,246,0.15)" : "transparent",
+            color: view === "board" ? "#60a5fa" : "var(--text-muted)",
+            border: view === "board" ? "1px solid rgba(59,130,246,0.3)" : "1px solid var(--border-faint)",
+          }}
+        >
+          Board
+        </button>
+        <button
+          onClick={() => setView("charts")}
+          className="px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+          style={{
+            background: view === "charts" ? "rgba(139,92,246,0.15)" : "transparent",
+            color: view === "charts" ? "#a78bfa" : "var(--text-muted)",
+            border: view === "charts" ? "1px solid rgba(139,92,246,0.3)" : "1px solid var(--border-faint)",
+          }}
+        >
+          Charts
+        </button>
       </div>
 
-      {/* Kanban board */}
-      <KanbanBoard
-        items={items}
-        workers={workers}
-        day={day}
-        settings={settings}
-        selectedWorkerId={phase === "assign" && !gameOver ? selectedWorkerId : null}
-        onClickItem={onClickItem}
-        onPullItem={onPullItem}
-        onReorderBacklog={onReorderBacklog}
-        disabled={phase !== "assign" || gameOver}
-      />
+      {view === "board" ? (
+        <>
+          {/* Settings + Worker pool side by side */}
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-3 mb-3">
+            <SettingsPanel
+              settings={settings}
+              onUpdate={onUpdateSettings}
+              onRestart={onRestart}
+              locked={settingsLocked}
+            />
+            <WorkerPool
+              workers={workers}
+              selectedWorkerId={selectedWorkerId}
+              onSelectWorker={onSelectWorker}
+              onUnassignWorker={onUnassignWorker}
+              disabled={phase !== "assign" || gameOver}
+            />
+          </div>
+
+          {/* Kanban board */}
+          <KanbanBoard
+            items={items}
+            workers={workers}
+            day={day}
+            settings={settings}
+            selectedWorkerId={phase === "assign" && !gameOver ? selectedWorkerId : null}
+            onClickItem={onClickItem}
+            onPullItem={onPullItem}
+            onReorderBacklog={onReorderBacklog}
+            disabled={phase !== "assign" || gameOver}
+          />
+        </>
+      ) : (
+        <LiveChartsPanel
+          items={items}
+          snapshots={snapshots}
+          settings={settings}
+          currentDay={day}
+        />
+      )}
 
       <div className="flex justify-between mt-5 flex-wrap gap-2.5">
-        <Btn onClick={onBack}>&larr; Intro</Btn>
+        <Btn onClick={onBack}>&larr; Back</Btn>
       </div>
     </div>
   );

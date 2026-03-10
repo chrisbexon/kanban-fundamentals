@@ -1,5 +1,6 @@
 import { Shell } from "@/components/ui/shell";
 import { Footer } from "@/components/ui/footer";
+import { ChatWidget } from "@/components/ui/chat-widget";
 
 export default function PlatformLayout({
   children,
@@ -10,6 +11,7 @@ export default function PlatformLayout({
     <Shell>
       {children}
       <Footer />
+      <ChatWidget />
     </Shell>
   );
 }

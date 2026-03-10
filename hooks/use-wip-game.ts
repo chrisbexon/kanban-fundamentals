@@ -13,6 +13,14 @@ import {
   pullFinishedItem, pullBacklogItem,
 } from "@/lib/engine/wip-game";
 
+/** Completed round data preserved for debrief comparison */
+export interface RoundHistory {
+  round: number;
+  items: WipWorkItem[];
+  snapshots: DaySnapshot[];
+  settings: WipSettings;
+}
+
 export function useWipGame() {
   const seed = useMemo(() => loadSeed(), []);
 
@@ -23,6 +31,7 @@ export function useWipGame() {
   const [settings, setSettings] = useState<WipSettings>(() => ({
     wipLimits: { ...DEFAULT_SETTINGS.wipLimits },
     enforceWip: { ...DEFAULT_SETTINGS.enforceWip },
+    sleDays: DEFAULT_SETTINGS.sleDays,
   }));
   const [snapshots, setSnapshots] = useState<DaySnapshot[]>(() => [...seed.snapshots]);
   const [roundResults, setRoundResults] = useState<RoundResult[]>([]);
@@ -30,6 +39,10 @@ export function useWipGame() {
   const [lastResult, setLastResult] = useState<RoundResult | null>(null);
   const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null);
   const [gameOver, setGameOver] = useState(false);
+
+  // ─── Multi-round state ────────────────────────────────────
+  const [gameRound, setGameRound] = useState(1); // 1, 2, or 3
+  const [roundHistories, setRoundHistories] = useState<RoundHistory[]>([]);
 
   const currentDay = day;
   const roundNumber = day - SEED_DAYS;
@@ -57,6 +70,26 @@ export function useWipGame() {
   const assignedWorkerCount = useMemo(() =>
     workers.filter((w) => w.assignedItemId !== null).length,
   [workers]);
+
+  // Total work item age (for round 3 display)
+  const totalAge = useMemo(() => {
+    const active = items.filter(
+      (it) => it.location !== "backlog" && it.location !== "done" && it.dayStarted !== null,
+    );
+    return active.reduce((sum, it) => sum + (day - it.dayStarted!), 0);
+  }, [items, day]);
+
+  // All snapshots across all rounds (for debrief)
+  const allSnapshots = useMemo(() => {
+    const past = roundHistories.flatMap((rh) => rh.snapshots);
+    return [...past, ...snapshots];
+  }, [roundHistories, snapshots]);
+
+  // All completed items across all rounds (for debrief)
+  const allItems = useMemo(() => {
+    const past = roundHistories.flatMap((rh) => rh.items);
+    return [...past, ...items];
+  }, [roundHistories, items]);
 
   // Actions
 
@@ -90,9 +123,8 @@ export function useWipGame() {
     const nextDay = day + 1;
 
     const result = resolveRound(items, workers, nextDay, settings, events);
-    // Mark any items that just arrived in done
     const finalItems = markDoneItems(result.items, nextDay);
-    const snap = takeSnapshot(finalItems, nextDay);
+    const snap = takeSnapshot(finalItems, nextDay, gameRound);
 
     setItems(finalItems);
     setWorkers(result.workers);
@@ -101,19 +133,13 @@ export function useWipGame() {
     setLastResult(result.result);
     setRoundResults((prev) => [...prev, result.result]);
     setSnapshots((prev) => [...prev, snap]);
-    setPhase("resolve");
+    setPhase("assign");
     setSelectedWorkerId(null);
 
     if (nextDay >= TOTAL_GAME_DAYS) {
       setGameOver(true);
     }
-  }, [phase, day, items, workers, settings, events]);
-
-  const handleAcknowledgeRound = useCallback(() => {
-    if (phase !== "resolve") return;
-    setPhase("assign");
-    setLastResult(null);
-  }, [phase]);
+  }, [phase, day, items, workers, settings, events, gameRound]);
 
   const handleUpdateSettings = useCallback((newSettings: Partial<WipSettings>) => {
     setSettings((prev) => ({
@@ -121,6 +147,7 @@ export function useWipGame() {
       ...newSettings,
       wipLimits: { ...prev.wipLimits, ...newSettings.wipLimits },
       enforceWip: { ...prev.enforceWip, ...newSettings.enforceWip },
+      sleDays: newSettings.sleDays ?? prev.sleDays,
     }));
   }, []);
 
@@ -143,6 +170,7 @@ export function useWipGame() {
     setItems((prev) => reorderBacklog(prev, itemId, direction));
   }, [phase]);
 
+  /** Restart within current round */
   const handleRestart = useCallback(() => {
     setItems(seed.items.map((it) => ({ ...it })));
     setWorkers(makeWorkers());
@@ -155,6 +183,33 @@ export function useWipGame() {
     setSelectedWorkerId(null);
     setGameOver(false);
   }, [seed]);
+
+  /** Save current round and start the next one */
+  const handleStartNextRound = useCallback(() => {
+    // Save current round history
+    const history: RoundHistory = {
+      round: gameRound,
+      items: items.map((it) => ({ ...it })),
+      snapshots: snapshots.map((s) => ({ ...s })),
+      settings: { ...settings, wipLimits: { ...settings.wipLimits }, enforceWip: { ...settings.enforceWip } },
+    };
+    setRoundHistories((prev) => [...prev, history]);
+
+    // Reset board for next round
+    const nextRound = gameRound + 1;
+    setGameRound(nextRound);
+    setItems(seed.items.map((it) => ({ ...it })));
+    setWorkers(makeWorkers());
+    setDay(SEED_DAYS);
+    setPhase("assign");
+    // Seed snapshots tagged with new round number
+    setSnapshots(seed.snapshots.map((s) => ({ ...s, round: nextRound })));
+    setRoundResults([]);
+    setEvents([]);
+    setLastResult(null);
+    setSelectedWorkerId(null);
+    setGameOver(false);
+  }, [gameRound, items, snapshots, settings, seed]);
 
   const handleAcknowledgeEvent = useCallback((eventId: string) => {
     setEvents((prev) =>
@@ -176,6 +231,13 @@ export function useWipGame() {
     selectedWorkerId,
     gameOver,
 
+    // Multi-round
+    gameRound,
+    roundHistories,
+    allSnapshots,
+    allItems,
+    totalAge,
+
     // Derived
     roundNumber,
     isLastRound,
@@ -190,11 +252,12 @@ export function useWipGame() {
     clickItem: handleClickItem,
     unassignWorker: handleUnassignWorker,
     resolveRound: handleResolveRound,
-    acknowledgeRound: handleAcknowledgeRound,
+    acknowledgeRound: () => {},
     updateSettings: handleUpdateSettings,
     pullItem: handlePullItem,
     reorderBacklog: handleReorderBacklog,
     restart: handleRestart,
+    startNextRound: handleStartNextRound,
     acknowledgeEvent: handleAcknowledgeEvent,
   };
 }

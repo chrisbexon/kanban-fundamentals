@@ -27,6 +27,11 @@ export function MonteCarloChart({ items, mode, daysOrTarget }: MonteCarloChartPr
 
   const xLabel = mode === "howMany" ? "Items Completed" : "Days Needed";
 
+  // Build plain-language interpretation
+  const interpretation = mode === "howMany"
+    ? `Based on your throughput so far, there's an 85% chance your team will complete at least **${p85} items** in the next ${daysOrTarget} days. A coin-flip estimate (50%) gives ${p50} items, and if things go well (95%) you could reach ${p95}.`
+    : `There's an 85% chance your team will finish these items within **${p85} days**. The most likely outcome (50%) is around ${p50} days, and in the worst case (95%) it could take up to ${p95} days.`;
+
   return (
     <div>
       <div className="flex gap-3 mb-2 text-[10px]">
@@ -51,6 +56,12 @@ export function MonteCarloChart({ items, mode, daysOrTarget }: MonteCarloChartPr
           <Bar dataKey="count" fill="#8b5cf6" fillOpacity={0.6} radius={[2, 2, 0, 0]} name="Simulations" />
         </BarChart>
       </ResponsiveContainer>
+      <div
+        className="mt-2.5 rounded-lg px-3 py-2 text-xs leading-relaxed"
+        style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.12)", color: "var(--text-secondary)" }}
+      >
+        {interpretation}
+      </div>
     </div>
   );
 }

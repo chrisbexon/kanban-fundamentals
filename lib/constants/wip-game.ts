@@ -61,9 +61,13 @@ export const STAGE_COLORS: Record<WorkColor, string> = {
   green: "#22c55e",
 };
 
+/** SLE (Service Level Expectation) - 85th percentile target */
+export const SLE_DAYS = 12;
+
 export const DEFAULT_SETTINGS: WipSettings = {
   wipLimits: { red: 4, blue: 4, green: 3 },
   enforceWip: { red: true, blue: true, green: true },
+  sleDays: SLE_DAYS,
 };
 
 export const INITIAL_WORKERS: Worker[] = [
@@ -71,6 +75,7 @@ export const INITIAL_WORKERS: Worker[] = [
   { id: "r2", color: "red", name: "Red 2", assignedItemId: null },
   { id: "b1", color: "blue", name: "Blue 1", assignedItemId: null },
   { id: "b2", color: "blue", name: "Blue 2", assignedItemId: null },
+  { id: "b3", color: "blue", name: "Blue 3", assignedItemId: null },
   { id: "g1", color: "green", name: "Green 1", assignedItemId: null },
   { id: "g2", color: "green", name: "Green 2", assignedItemId: null },
 ];
@@ -83,16 +88,13 @@ export const CROSS_TRAINED_DICE = { min: 1, max: 3 };
 export const WORK_REQUIRED_RANGE = { min: 3, max: 12 };
 
 /** Blocker config */
-export const BLOCK_CHANCE = 0.15;
+export const BLOCK_CHANCE = 0.22;
 export const BLOCKER_WORK_REQUIRED = 5;
 
 /** Game timing */
 export const SEED_DAYS = 45;
 export const PLAYABLE_ROUNDS = 15;
 export const TOTAL_GAME_DAYS = 60;
-
-/** SLE (Service Level Expectation) - 85th percentile target */
-export const SLE_DAYS = 12;
 
 /** Events config */
 export const EVENTS_CONFIG = [

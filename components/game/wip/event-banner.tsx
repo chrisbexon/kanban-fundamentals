@@ -15,30 +15,39 @@ export function EventBanner({ event, onAcknowledge }: EventBannerProps) {
 
   return (
     <div
-      className="pop-in rounded-xl p-4 mb-3 flex items-start gap-3"
-      style={{
-        background: `rgba(${bgColor}, 0.06)`,
-        border: `1px solid rgba(${bgColor}, 0.2)`,
-      }}
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+      onClick={onAcknowledge}
     >
       <div
-        className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
-        style={{ background: `rgba(${bgColor}, 0.12)` }}
+        className="pop-in rounded-2xl p-6 max-w-md mx-4 flex flex-col items-center text-center gap-4"
+        style={{
+          background: "var(--bg-base, #1a1a2e)",
+          border: `2px solid rgba(${bgColor}, 0.4)`,
+          boxShadow: `0 0 40px rgba(${bgColor}, 0.15)`,
+        }}
+        onClick={(e) => e.stopPropagation()}
       >
-        {isSecurity ? "\uD83D\uDD12" : "\uD83D\uDCCB"}
-      </div>
-      <div className="flex-1">
-        <div className="text-sm font-bold mb-0.5" style={{ color }}>
-          {isSecurity ? "Security Patch Required!" : "Compliance Audit Incoming!"}
+        <div
+          className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
+          style={{ background: `rgba(${bgColor}, 0.12)` }}
+        >
+          {isSecurity ? "\uD83D\uDD12" : "\uD83D\uDCCB"}
         </div>
-        <div className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          A new {event.type} work item has been added to your backlog.
-          It must reach <strong style={{ color: "var(--text-primary)" }}>Done</strong> by{" "}
-          <strong style={{ color }}>Day {event.dueDay}</strong>.
-          Prioritise accordingly.
+        <div>
+          <div className="text-lg font-bold mb-2" style={{ color }}>
+            {isSecurity ? "Security Patch Required!" : "Compliance Audit Incoming!"}
+          </div>
+          <div className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            A new <strong style={{ color }}>{event.type}</strong> work item has been added to your{" "}
+            <strong style={{ color: "var(--text-primary)" }}>Backlog</strong>.
+            It must reach <strong style={{ color: "var(--text-primary)" }}>Done</strong> by{" "}
+            <strong style={{ color }}>Day {event.dueDay}</strong>.
+            Prioritise accordingly.
+          </div>
         </div>
+        <Btn primary onClick={onAcknowledge}>Got it</Btn>
       </div>
-      <Btn small onClick={onAcknowledge}>Got it</Btn>
     </div>
   );
 }

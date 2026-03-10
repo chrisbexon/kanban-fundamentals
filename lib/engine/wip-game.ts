@@ -227,9 +227,7 @@ export function resolveRound(
   const itemsAdvanced: string[] = [];
   its = advanceItems(its, settings, itemsAdvanced);
 
-  // 4. Pull from backlog into red-active if space
-  const itemsPulled: string[] = [];
-  its = pullFromBacklog(its, settings, day, itemsPulled);
+  // 4. No auto-pull from backlog — player must pull manually
 
   // 5. Random blocker check
   let blockerApplied: string | null = null;
@@ -243,9 +241,29 @@ export function resolveRound(
   newEvents = eventResult.events;
   eventTriggered = eventResult.triggered;
 
-  // 7. Clear worker assignments
-  const clearedWorkers = workers.map((w) => ({ ...w, assignedItemId: null }));
-  its = its.map((it) => ({ ...it, assignedWorkerIds: [] }));
+  // 7. Keep worker assignments — players can manually reassign
+  const keptWorkers = workers.map((w) => {
+    if (!w.assignedItemId) return { ...w };
+    // If the item the worker was on no longer needs work at its location, unassign
+    const item = its.find((it) => it.id === w.assignedItemId);
+    if (!item) return { ...w, assignedItemId: null };
+    // Keep assigned if item is still in an active stage or blocked
+    const workColor = LOCATION_WORK_COLOR[item.location];
+    if (item.blocked) return { ...w };
+    if (workColor) {
+      const bar = item.work[workColor];
+      if (bar.done < bar.required) return { ...w };
+    }
+    // Item finished its current stage work or moved to a buffer — unassign
+    return { ...w, assignedItemId: null };
+  });
+  // Sync item assignedWorkerIds with worker state
+  its = its.map((it) => ({
+    ...it,
+    assignedWorkerIds: keptWorkers
+      .filter((w) => w.assignedItemId === it.id)
+      .map((w) => w.id),
+  }));
 
   // Count throughput this round
   const throughput = its.filter(
@@ -254,12 +272,12 @@ export function resolveRound(
 
   return {
     items: its,
-    workers: clearedWorkers,
+    workers: keptWorkers,
     result: {
       day,
       workerRolls,
       itemsAdvanced,
-      itemsPulled,
+      itemsPulled: [],
       blockerApplied,
       blockerCleared,
       eventTriggered,
@@ -269,7 +287,9 @@ export function resolveRound(
   };
 }
 
-/** Advance items whose current stage work is complete */
+/** Advance items whose current stage work is complete.
+ *  Only auto-advances within a color (active → finished) and green → done.
+ *  Movement across color boundaries (finished → next active) is manual pull only. */
 export function advanceItems(
   items: WipWorkItem[],
   settings: WipSettings,
@@ -281,11 +301,10 @@ export function advanceItems(
   // Keep looping until no more items can advance (cascade)
   while (changed) {
     changed = false;
-    // Process from downstream to upstream
+    // Only auto-advance from active stages to their finished/done state
+    // red-active → red-finished, blue-active → blue-finished, green → done
     const activeLocations: WipLocation[] = ["green", "blue-active", "red-active"];
-    const bufferLocations: WipLocation[] = ["blue-finished", "red-finished"];
 
-    // Advance from active stages when work is done
     for (const loc of activeLocations) {
       const workColor = LOCATION_WORK_COLOR[loc];
       if (!workColor) continue;
@@ -294,7 +313,6 @@ export function advanceItems(
       for (const item of its.filter((it) => it.location === loc && !it.blocked)) {
         const bar = item.work[workColor];
         if (bar.done >= bar.required) {
-          // Check WIP of destination if it's an active/counted column
           if (canMoveToLocation(its, item, nextLoc, settings)) {
             item.location = nextLoc;
             if (nextLoc === "done") {
@@ -307,18 +325,7 @@ export function advanceItems(
       }
     }
 
-    // Advance from buffer/finished stages (no work needed, just WIP check)
-    for (const loc of bufferLocations) {
-      const nextLoc = STAGE_AFTER[loc as Exclude<WipLocation, "done">];
-
-      for (const item of its.filter((it) => it.location === loc && !it.blocked)) {
-        if (canMoveToLocation(its, item, nextLoc, settings)) {
-          item.location = nextLoc;
-          advanced.push(item.id);
-          changed = true;
-        }
-      }
-    }
+    // Buffer/finished stages are NOT auto-advanced — player must pull them manually
   }
 
   return its;
@@ -449,7 +456,7 @@ export function checkEvents(
 // ─── Snapshots ──────────────────────────────────────────────
 
 /** Take a snapshot of the current board state */
-export function takeSnapshot(items: WipWorkItem[], day: number): DaySnapshot {
+export function takeSnapshot(items: WipWorkItem[], day: number, round: number = 1): DaySnapshot {
   const itemsByLocation = {} as Record<WipLocation, number>;
   for (const loc of LOCATIONS_IN_ORDER) {
     itemsByLocation[loc as WipLocation] = items.filter((it) => it.location === loc).length;
@@ -471,6 +478,7 @@ export function takeSnapshot(items: WipWorkItem[], day: number): DaySnapshot {
 
   return {
     day,
+    round,
     itemsByLocation,
     wipByColor,
     itemsDone: items.filter((it) => it.location === "done").length,

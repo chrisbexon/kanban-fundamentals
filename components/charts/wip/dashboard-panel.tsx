@@ -2,11 +2,12 @@
 
 import type { WipWorkItem } from "@/types/wip-game";
 import { dashboardMetrics } from "@/lib/stats/wip-game-stats";
-import { SLE_DAYS } from "@/lib/constants/wip-game";
+import { SLE_DAYS as DEFAULT_SLE } from "@/lib/constants/wip-game";
 
 interface DashboardPanelProps {
   items: WipWorkItem[];
   currentDay: number;
+  sleDays?: number;
 }
 
 interface MetricCardProps {
@@ -33,12 +34,12 @@ function MetricCard({ label, value, unit, color, sub }: MetricCardProps) {
   );
 }
 
-export function DashboardPanel({ items, currentDay }: DashboardPanelProps) {
-  const m = dashboardMetrics(items, currentDay);
+export function DashboardPanel({ items, currentDay, sleDays = DEFAULT_SLE }: DashboardPanelProps) {
+  const m = dashboardMetrics(items, currentDay, sleDays);
 
   const sleColor = m.sleMetPct >= 85 ? "#22c55e" : m.sleMetPct >= 70 ? "#f59e0b" : "#ef4444";
   const wipColor = m.currentWip > 11 ? "#ef4444" : m.currentWip > 8 ? "#f59e0b" : "#3b82f6";
-  const ageColor = m.avgAge > SLE_DAYS ? "#ef4444" : m.avgAge > SLE_DAYS * 0.7 ? "#f59e0b" : "#22c55e";
+  const ageColor = m.avgAge > sleDays ? "#ef4444" : m.avgAge > sleDays * 0.7 ? "#f59e0b" : "#22c55e";
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -53,7 +54,7 @@ export function DashboardPanel({ items, currentDay }: DashboardPanelProps) {
         value={m.p85CycleTime}
         unit="days"
         color="#f59e0b"
-        sub={`SLE target: ${SLE_DAYS}d`}
+        sub={`SLE target: ${sleDays}d`}
       />
       <MetricCard
         label="Throughput"
@@ -70,7 +71,7 @@ export function DashboardPanel({ items, currentDay }: DashboardPanelProps) {
         label="SLE Met"
         value={`${m.sleMetPct}%`}
         color={sleColor}
-        sub={`\u2264 ${SLE_DAYS} days`}
+        sub={`\u2264 ${sleDays} days`}
       />
       <MetricCard
         label="Avg Item Age"

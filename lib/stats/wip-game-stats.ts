@@ -270,7 +270,7 @@ export function monteCarloWhen(
 // ─── Dashboard Metrics ──────────────────────────────────────
 
 /** Compute summary dashboard metrics */
-export function dashboardMetrics(items: WipWorkItem[], currentDay: number): DashboardMetrics {
+export function dashboardMetrics(items: WipWorkItem[], currentDay: number, sleDays: number = SLE_DAYS): DashboardMetrics {
   const done = items.filter((it) => it.dayDone !== null && it.dayStarted !== null);
   const cts = done.map((it) => it.dayDone! - it.dayStarted!);
 
@@ -287,8 +287,8 @@ export function dashboardMetrics(items: WipWorkItem[], currentDay: number): Dash
     (it) => it.location !== "backlog" && it.location !== "done",
   ).length;
 
-  // SLE met: % of done items with cycle time <= SLE_DAYS
-  const sleMet = cts.length > 0 ? cts.filter((ct) => ct <= SLE_DAYS).length : 0;
+  // SLE met: % of done items with cycle time <= sleDays
+  const sleMet = cts.length > 0 ? cts.filter((ct) => ct <= sleDays).length : 0;
   const sleMetPct = cts.length > 0 ? Math.round((sleMet / cts.length) * 100) : 0;
 
   // Average age of in-progress items

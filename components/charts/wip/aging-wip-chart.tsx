@@ -3,15 +3,16 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Cell } from "recharts";
 import type { WipWorkItem } from "@/types/wip-game";
 import { agingWip } from "@/lib/stats/wip-game-stats";
-import { SLE_DAYS, COLUMN_DEFS } from "@/lib/constants/wip-game";
+import { SLE_DAYS as DEFAULT_SLE, COLUMN_DEFS } from "@/lib/constants/wip-game";
 import { CHART_TOOLTIP, CHART_GRID, CHART_AXIS, CHART_TICK, CHART_TICK_SM, CHART_LABEL } from "@/lib/chart-theme";
 
 interface AgingWipChartProps {
   items: WipWorkItem[];
   currentDay: number;
+  sleDays?: number;
 }
 
-export function AgingWipChart({ items, currentDay }: AgingWipChartProps) {
+export function AgingWipChart({ items, currentDay, sleDays = DEFAULT_SLE }: AgingWipChartProps) {
   const data = agingWip(items, currentDay);
   if (data.length === 0) return <div className="text-xs text-center py-8" style={{ color: "var(--text-muted)" }}>No items in progress</div>;
 
@@ -33,11 +34,11 @@ export function AgingWipChart({ items, currentDay }: AgingWipChartProps) {
           width={45}
         />
         <Tooltip {...CHART_TOOLTIP} formatter={(value: number) => [`${value} days`, "Age"]} />
-        <ReferenceLine x={SLE_DAYS} stroke="#ef444440" strokeDasharray="4 4" label={{ value: "SLE", position: "top", style: { fontSize: 9, fill: "#ef4444" } }} />
+        <ReferenceLine x={sleDays} stroke="#ef444440" strokeDasharray="4 4" label={{ value: "SLE", position: "top", style: { fontSize: 9, fill: "#ef4444" } }} />
         <Bar dataKey="age" radius={[0, 3, 3, 0]} name="Age">
           {data.map((entry, i) => {
             const col = COLUMN_DEFS.find((c) => c.location === entry.location);
-            const color = entry.age > SLE_DAYS ? "#ef4444" : entry.age > SLE_DAYS * 0.7 ? "#f59e0b" : (col?.color ?? "#3b82f6");
+            const color = entry.age > sleDays ? "#ef4444" : entry.age > sleDays * 0.7 ? "#f59e0b" : (col?.color ?? "#3b82f6");
             return <Cell key={i} fill={color} fillOpacity={0.7} />;
           })}
         </Bar>

@@ -61,7 +61,7 @@ export function DebriefStep({ runs, snaps, onNext, onBack }: DebriefStepProps) {
       <div className="flex flex-col gap-5">
         <ChartCard
           title="Cumulative Throughput"
-          desc="Items completed over time. Large batches: flat then jumps. Small batches: steady and early \u2014 healthy flow."
+          desc="Items completed over time. Large batches: flat then jumps. Small batches: steady and early — healthy flow."
         >
           <ThroughputChart snaps={snaps} />
         </ChartCard>
@@ -75,7 +75,7 @@ export function DebriefStep({ runs, snaps, onNext, onBack }: DebriefStepProps) {
 
         {lgBd.length > 0 && smBd.length > 0 && lg.bs !== sm.bs && (
           <ChartCard
-            title="Work Time vs Wait Time \u2014 Per Item"
+            title="Work Time vs Wait Time — Per Item"
             desc={`Each bar = one coin. Green = processing. Red = waiting. Batch ${lg.bs} (left) vs ${sm.bs} (right).`}
           >
             <div className="flex gap-4 flex-wrap">
@@ -88,7 +88,7 @@ export function DebriefStep({ runs, snaps, onNext, onBack }: DebriefStepProps) {
         {ltD.length > 0 && (
           <ChartCard
             title="Lead Time Distribution"
-            desc="Large batches: items cluster at the same high value. Small batches: shorter, more varied \u2014 reflecting actual work."
+            desc="Large batches: items cluster at the same high value. Small batches: shorter, more varied — reflecting actual work."
           >
             <div className="flex gap-4 flex-wrap">
               {ltD.map((run, ri) => (

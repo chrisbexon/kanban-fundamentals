@@ -3,9 +3,35 @@
 import type { WipWorkItem, Worker, WorkColor } from "@/types/wip-game";
 import { STAGE_COLORS } from "@/lib/constants/wip-game";
 
+/** Age thresholds relative to SLE — drives border + badge colour */
+function ageLevel(age: number, sleDays: number): "ok" | "warn" | "breach" {
+  if (age >= sleDays) return "breach";
+  if (age >= sleDays * 0.67) return "warn";   // ~67% of SLE
+  return "ok";
+}
+
+const AGE_BORDER: Record<ReturnType<typeof ageLevel>, string> = {
+  ok:     "#22c55e",   // green
+  warn:   "#f59e0b",   // amber
+  breach: "#ef4444",   // red
+};
+
+const AGE_BADGE_BG: Record<ReturnType<typeof ageLevel>, string> = {
+  ok:     "var(--bg-interactive)",
+  warn:   "rgba(245,158,11,0.12)",
+  breach: "rgba(239,68,68,0.12)",
+};
+
+const AGE_BADGE_FG: Record<ReturnType<typeof ageLevel>, string> = {
+  ok:     "var(--text-tertiary)",
+  warn:   "#fbbf24",
+  breach: "#f87171",
+};
+
 interface WorkItemCardProps {
   item: WipWorkItem;
   day: number;
+  sleDays: number;
   assignedWorkers: Worker[];
   onClick?: () => void;
   isAssignable?: boolean;
@@ -42,10 +68,12 @@ function WorkBarDisplay({ color, required, done }: { color: WorkColor; required:
   );
 }
 
-export function WorkItemCard({ item, day, assignedWorkers, onClick, isAssignable, compact }: WorkItemCardProps) {
+export function WorkItemCard({ item, day, sleDays, assignedWorkers, onClick, isAssignable, compact }: WorkItemCardProps) {
   const age = item.dayStarted ? day - item.dayStarted : 0;
   const isExpedite = item.class !== "standard";
   const overdue = item.dueDay !== null && day > item.dueDay && item.location !== "done";
+  const isInProgress = item.dayStarted !== null && item.location !== "backlog" && item.location !== "done";
+  const level = ageLevel(age, sleDays);
 
   return (
     <button
@@ -66,21 +94,24 @@ export function WorkItemCard({ item, day, assignedWorkers, onClick, isAssignable
           : isExpedite
           ? "1px solid rgba(168,85,247,0.2)"
           : "1px solid var(--border-subtle)",
+        borderLeft: isInProgress
+          ? `3px solid ${AGE_BORDER[level]}`
+          : undefined,
       }}
     >
       {/* Header row */}
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-bold font-mono" style={{ color: "var(--text-secondary)" }}>{item.id}</span>
+      <div className="flex items-center justify-between mb-1.5 gap-1 overflow-hidden">
+        <div className="flex items-center gap-1 min-w-0">
+          <span className="text-[10px] font-bold font-mono truncate" style={{ color: "var(--text-secondary)" }}>{item.id}</span>
           {isExpedite && (
             <span
-              className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded"
+              className="text-[7px] font-bold uppercase px-1 py-0.5 rounded flex-shrink-0"
               style={{
                 background: item.class === "security" ? "rgba(239,68,68,0.15)" : "rgba(168,85,247,0.15)",
                 color: item.class === "security" ? "#f87171" : "#c084fc",
               }}
             >
-              {item.class}
+              {item.class === "compliance" ? "COMPL" : item.class}
             </span>
           )}
         </div>
@@ -94,8 +125,8 @@ export function WorkItemCard({ item, day, assignedWorkers, onClick, isAssignable
             <span
               className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded"
               style={{
-                background: age > 12 ? "rgba(239,68,68,0.12)" : age > 8 ? "rgba(245,158,11,0.12)" : "var(--bg-interactive)",
-                color: age > 12 ? "#f87171" : age > 8 ? "#fbbf24" : "var(--text-tertiary)",
+                background: AGE_BADGE_BG[level],
+                color: AGE_BADGE_FG[level],
               }}
             >
               {age}d

@@ -44,6 +44,7 @@ export interface Worker {
 export interface WipSettings {
   wipLimits: Record<WorkColor, number>;
   enforceWip: Record<WorkColor, boolean>;
+  sleDays: number;
 }
 
 export interface GameEvent {
@@ -75,6 +76,7 @@ export interface RoundResult {
 
 export interface DaySnapshot {
   day: number;
+  round: number;
   itemsByLocation: Record<WipLocation, number>;
   wipByColor: Record<WorkColor, number>;
   itemsDone: number;

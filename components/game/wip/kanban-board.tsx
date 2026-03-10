@@ -73,6 +73,7 @@ export function KanbanBoard({
             items={colItems}
             workers={workers}
             day={day}
+            sleDays={settings.sleDays}
             wipCount={def.wipColor ? wipCounts[def.wipColor] : undefined}
             wipLimit={def.wipColor ? settings.wipLimits[def.wipColor] : undefined}
             enforceWip={def.wipColor ? settings.enforceWip[def.wipColor] : undefined}

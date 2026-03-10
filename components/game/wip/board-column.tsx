@@ -10,6 +10,7 @@ interface BoardColumnProps {
   items: WipWorkItem[];
   workers: Worker[];
   day: number;
+  sleDays: number;
   wipCount?: number;
   wipLimit?: number;
   enforceWip?: boolean;
@@ -21,7 +22,7 @@ interface BoardColumnProps {
 }
 
 export function BoardColumn({
-  def, items, workers, day, wipCount, wipLimit, enforceWip,
+  def, items, workers, day, sleDays, wipCount, wipLimit, enforceWip,
   onClickItem, assignableItemIds, pullableItemIds, onPullItem, onReorder,
 }: BoardColumnProps) {
   const isOverWip = wipCount !== undefined && wipLimit !== undefined && enforceWip && wipCount > wipLimit;
@@ -112,6 +113,7 @@ export function BoardColumn({
                   <WorkItemCard
                     item={item}
                     day={day}
+                    sleDays={sleDays}
                     assignedWorkers={itemWorkers}
                     onClick={canClick ? () => onClickItem?.(item.id) : undefined}
                     isAssignable={canClick}
