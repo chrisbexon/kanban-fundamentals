@@ -117,6 +117,30 @@ export interface ItemTypeDefinition {
   defaultSwimlane: string | null;  // auto-assign to this lane (e.g., bugs → expedite)
 }
 
+// ─── Run Mode & Simulation ──────────────────────────────────
+
+/** Run mode: manual = player drags items; auto = engine simulates */
+export type RunMode = "manual" | "auto";
+
+/** Class of service for work items */
+export type ClassOfService = "standard" | "expedite" | "regulatory";
+
+/** Simulation settings for automated mode */
+export interface AutoSimSettings {
+  /** Mean processing days per active column (normal distribution center) */
+  meanProcessingDays: number;
+  /** Standard deviation for processing days */
+  stdDevProcessingDays: number;
+  /** Probability per round of a blocker appearing on any active item (0-1) */
+  blockChance: number;
+  /** Work units (days) required to clear a blocker */
+  blockerEffort: number;
+  /** Probability per round of a regulatory/fixed-date item appearing (0-1) */
+  regulatoryChance: number;
+  /** Due day offset for regulatory items (days from creation) */
+  regulatoryDueDayOffset: number;
+}
+
 export interface BoardSettings {
   /** Service Level Expectation: target cycle time in days */
   sleDays: number;
@@ -140,6 +164,9 @@ export interface BoardSettings {
 
   /** Probability per day of an item completing its current active stage (default 0.4) */
   processingChance: number;
+
+  /** Simulation settings for auto mode */
+  autoSim: AutoSimSettings;
 }
 
 // ─── Work Items ──────────────────────────────────────────────
@@ -172,6 +199,18 @@ export interface BoardWorkItem {
 
   /** Priority within its column (lower = higher priority, for ordering) */
   order: number;
+
+  /** Class of service */
+  classOfService: ClassOfService;
+
+  /** Work remaining in current active column (auto mode, days) */
+  workRemaining: number;
+
+  /** Total work assigned for current column (auto mode, for progress display) */
+  workTotal: number;
+
+  /** Blocker effort remaining in days (0 = not blocked via effort model) */
+  blockerEffort: number;
 }
 
 export interface StateTransition {
@@ -195,6 +234,7 @@ export interface BoardState {
   definition: BoardDefinition;
   items: BoardWorkItem[];
   mode: BoardMode;
+  runMode: RunMode;
   currentDay: number;
   nextItemNumber: number;       // auto-increment for generating IDs
 
@@ -241,14 +281,24 @@ export interface GenericCfdPoint {
 
 // ─── Defaults & Factories ────────────────────────────────────
 
+export const DEFAULT_AUTO_SIM: AutoSimSettings = {
+  meanProcessingDays: 3,
+  stdDevProcessingDays: 1.5,
+  blockChance: 0.15,
+  blockerEffort: 2,
+  regulatoryChance: 0.03,
+  regulatoryDueDayOffset: 10,
+};
+
 export const DEFAULT_BOARD_SETTINGS: BoardSettings = {
   sleDays: 15,
   slePercentile: 85,
   systemWipLimit: null,
   ageWarningDays: 10,
   ageCriticalDays: 15,
-  arrivalRate: 2,
+  arrivalRate: 0.8,
   processingChance: 0.4,
+  autoSim: { ...DEFAULT_AUTO_SIM },
 };
 
 export const DEFAULT_SWIMLANE: SwimlaneDefinition = {
@@ -348,6 +398,7 @@ export function createEmptyBoardState(definition?: BoardDefinition): BoardState 
     definition: def,
     items: [],
     mode: "design",
+    runMode: "manual",
     currentDay: 0,
     nextItemNumber: 1,
     snapshots: [],

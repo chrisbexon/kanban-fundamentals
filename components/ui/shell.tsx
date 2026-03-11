@@ -17,7 +17,7 @@ export function Shell({ children }: ShellProps) {
       <div className="absolute top-4 right-4 z-10">
         <ThemeToggle />
       </div>
-      <div className="max-w-[1140px] mx-auto px-4 py-5">
+      <div className="max-w-[1800px] mx-auto px-6 py-3">
         {children}
       </div>
     </div>

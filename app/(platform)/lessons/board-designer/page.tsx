@@ -243,7 +243,7 @@ export default function BoardDesignerLesson() {
 
 function SectionHeader() {
   return (
-    <div className="mb-6">
+    <div className="mb-3">
       <div className="flex items-center gap-2 mb-1">
         <div className="w-1.5 h-5 rounded-full" style={{ background: "#f59e0b" }} />
         <span className="text-[10px] font-bold uppercase tracking-[2px]" style={{ color: "#f59e0b" }}>

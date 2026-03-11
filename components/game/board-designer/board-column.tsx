@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import type { ColumnDefinition, BoardWorkItem, ItemTypeDefinition, BoardSettings } from "@/types/board";
+import type { ColumnDefinition, BoardWorkItem, ItemTypeDefinition, BoardSettings, RunMode } from "@/types/board";
 import { BoardCard } from "./board-card";
 
 interface BoardColumnProps {
@@ -10,6 +10,7 @@ interface BoardColumnProps {
   itemTypes: ItemTypeDefinition[];
   currentDay: number;
   settings: BoardSettings;
+  runMode: RunMode;
   onDragStart: (e: React.DragEvent, itemId: string) => void;
   onDrop: (columnId: string, subColumnId: string | null) => void;
   canDrop: (columnId: string) => { allowed: boolean; reason: string };
@@ -17,7 +18,7 @@ interface BoardColumnProps {
 }
 
 export function BoardColumn({
-  column, items, itemTypes, currentDay, settings,
+  column, items, itemTypes, currentDay, settings, runMode,
   onDragStart, onDrop, canDrop, dragActive,
 }: BoardColumnProps) {
   const [dragOver, setDragOver] = useState(false);
@@ -47,7 +48,7 @@ export function BoardColumn({
   // If column has sub-columns, render them
   if (c.subColumns.length > 0) {
     return (
-      <div className="flex-1 min-w-[120px] flex flex-col">
+      <div className="flex-1 min-w-[120px] min-h-0 flex flex-col">
         {/* Column header */}
         <div className="rounded-t-lg px-2 py-1.5 text-center" style={{ background: `${c.color}10`, borderBottom: `2px solid ${c.color}30` }}>
           <div className="text-[10px] font-bold" style={{ color: c.color }}>{c.name}</div>
@@ -58,7 +59,7 @@ export function BoardColumn({
           )}
         </div>
         {/* Sub-columns */}
-        <div className="flex gap-px flex-1">
+        <div className="flex gap-px flex-1 min-h-0">
           {c.subColumns.map((sc) => {
             const scItems = items.filter((it) => it.subColumnId === sc.id);
             const scDropCheck = dragActive ? canDrop(c.id) : { allowed: true, reason: "" };
@@ -71,6 +72,7 @@ export function BoardColumn({
                 itemTypes={itemTypes}
                 currentDay={currentDay}
                 settings={settings}
+                runMode={runMode}
                 onDragStart={onDragStart}
                 onDrop={() => onDrop(c.id, sc.id)}
                 canDrop={scDropCheck.allowed}
@@ -86,7 +88,7 @@ export function BoardColumn({
   // Simple column (no sub-columns)
   return (
     <div
-      className="flex-1 min-w-[100px] flex flex-col rounded-lg transition-all"
+      className="flex-1 min-w-[100px] min-h-0 flex flex-col rounded-lg transition-all"
       style={{
         background: dragOver && dropCheck.allowed
           ? `${c.color}12`
@@ -117,7 +119,7 @@ export function BoardColumn({
       </div>
 
       {/* Cards */}
-      <div className="flex-1 p-1 flex flex-col gap-1 overflow-y-auto" style={{ minHeight: 60, maxHeight: 300 }}>
+      <div className="flex-1 min-h-0 p-1 flex flex-col gap-1 overflow-y-auto">
         {items.map((item) => (
           <BoardCard
             key={item.id}
@@ -125,6 +127,7 @@ export function BoardColumn({
             itemType={itemTypes.find((t) => t.id === item.typeId)}
             currentDay={currentDay}
             settings={settings}
+            runMode={runMode}
             onDragStart={onDragStart}
           />
         ))}
@@ -148,7 +151,7 @@ export function BoardColumn({
 // ─── Sub-Column ─────────────────────────────────────────────
 
 function SubColumn({
-  parentColumn, subColumn, items, itemTypes, currentDay, settings,
+  parentColumn, subColumn, items, itemTypes, currentDay, settings, runMode,
   onDragStart, onDrop, canDrop, dragActive,
 }: {
   parentColumn: ColumnDefinition;
@@ -157,6 +160,7 @@ function SubColumn({
   itemTypes: ItemTypeDefinition[];
   currentDay: number;
   settings: BoardSettings;
+  runMode: RunMode;
   onDragStart: (e: React.DragEvent, itemId: string) => void;
   onDrop: () => void;
   canDrop: boolean;
@@ -166,7 +170,7 @@ function SubColumn({
 
   return (
     <div
-      className="flex-1 flex flex-col transition-all"
+      className="flex-1 min-h-0 flex flex-col transition-all"
       style={{
         background: dragOver && canDrop ? `${parentColumn.color}08` : "transparent",
         borderLeft: `1px dashed ${parentColumn.color}12`,
@@ -186,7 +190,7 @@ function SubColumn({
       <div className="text-[8px] font-bold text-center py-1" style={{ color: "var(--text-muted)" }}>
         {subColumn.name}
       </div>
-      <div className="flex-1 p-0.5 flex flex-col gap-1 overflow-y-auto" style={{ minHeight: 40, maxHeight: 250 }}>
+      <div className="flex-1 min-h-0 p-0.5 flex flex-col gap-1 overflow-y-auto">
         {items.map((item) => (
           <BoardCard
             key={item.id}
@@ -194,6 +198,7 @@ function SubColumn({
             itemType={itemTypes.find((t) => t.id === item.typeId)}
             currentDay={currentDay}
             settings={settings}
+            runMode={runMode}
             onDragStart={onDragStart}
           />
         ))}

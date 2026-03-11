@@ -2,11 +2,15 @@
 
 import React from "react";
 import type { useBoardDesigner } from "@/hooks/use-board-designer";
-import type { ColumnDefinition, SubColumnDefinition, SwimlaneDefinition, ItemTypeDefinition } from "@/types/board";
+import type { ColumnDefinition, SubColumnDefinition, SwimlaneDefinition, ItemTypeDefinition, AutoSimSettings } from "@/types/board";
 import { BoardCanvas } from "./board-canvas";
 import { RoundControls } from "./round-controls";
 import { MetricsSummary } from "./metrics-summary";
 import { getWorkflowColumns } from "@/types/board";
+import { BoardCfdChart } from "@/components/charts/board/cfd-chart";
+import { BoardCtScatterChart } from "@/components/charts/board/ct-scatter-chart";
+import { BoardThroughputChart } from "@/components/charts/board/throughput-chart";
+import { AgingByStateChart } from "@/components/charts/board/aging-by-state-chart";
 
 type BoardActions = ReturnType<typeof useBoardDesigner>;
 
@@ -25,7 +29,9 @@ export function LiveBoardStep({ actions, onBack }: LiveBoardStepProps) {
     settingsOpen, chartsOpen,
     toggleSettings, toggleCharts,
     moveItem, canMoveItem, addWorkItem,
-    advanceRound, advanceMultiple, resetRun,
+    advanceRound, resetRun,
+    runMode, setRunMode,
+    isPlaying, play, pause, playSpeed, setPlaySpeed, targetDay, setTargetDay,
     validation, passCount,
   } = actions;
 
@@ -36,9 +42,9 @@ export function LiveBoardStep({ actions, onBack }: LiveBoardStepProps) {
   const doneCount = items.filter((it) => it.doneDay !== null).length;
 
   return (
-    <div className="fade-up flex flex-col gap-3">
+    <div className="fade-up flex flex-col gap-2">
       {/* Board header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <button onClick={onBack}
           className="text-[10px] font-bold px-2 py-1 rounded-lg border-none cursor-pointer"
           style={{ background: "var(--bg-surface)", color: "var(--text-muted)", border: "1px solid var(--border-faint)" }}>
@@ -69,18 +75,26 @@ export function LiveBoardStep({ actions, onBack }: LiveBoardStepProps) {
         passCount={passCount}
         totalChecks={validation.length}
         definition={definition}
+        runMode={runMode}
+        isPlaying={isPlaying}
+        playSpeed={playSpeed}
+        targetDay={targetDay}
         onAdvanceRound={advanceRound}
-        onAdvanceMultiple={advanceMultiple}
         onAddItem={addWorkItem}
         onReset={resetRun}
         onToggleSettings={toggleSettings}
         onToggleCharts={toggleCharts}
+        onSetRunMode={setRunMode}
+        onPlay={play}
+        onPause={pause}
+        onSetPlaySpeed={setPlaySpeed}
+        onSetTargetDay={setTargetDay}
         settingsOpen={settingsOpen}
         chartsOpen={chartsOpen}
       />
 
       {/* Main area: settings drawer + board */}
-      <div className="flex gap-3">
+      <div className="flex gap-2">
         {/* Settings drawer (collapsible) */}
         {settingsOpen && (
           <SettingsDrawer actions={actions} />
@@ -91,6 +105,7 @@ export function LiveBoardStep({ actions, onBack }: LiveBoardStepProps) {
           definition={definition}
           items={items}
           currentDay={currentDay}
+          runMode={runMode}
           onMoveItem={moveItem}
           canMoveItem={canMoveItem}
         />
@@ -103,9 +118,44 @@ export function LiveBoardStep({ actions, onBack }: LiveBoardStepProps) {
             Flow Metrics
           </div>
           <MetricsSummary boardState={boardState} />
-          {snapshots.length < 3 && (
+
+          {snapshots.length < 3 ? (
             <div className="text-[10px] text-center mt-3" style={{ color: "var(--text-muted)" }}>
               Advance a few more days to see charts with meaningful data.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+              {/* Cumulative Flow Diagram */}
+              <div className="rounded-lg p-3" style={{ background: "var(--bg-deeper)", border: "1px solid var(--border-faint)" }}>
+                <div className="text-[9px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
+                  Cumulative Flow Diagram
+                </div>
+                <BoardCfdChart snapshots={snapshots} definition={definition} />
+              </div>
+
+              {/* Cycle Time Scatter */}
+              <div className="rounded-lg p-3" style={{ background: "var(--bg-deeper)", border: "1px solid var(--border-faint)" }}>
+                <div className="text-[9px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
+                  Cycle Time Scatter
+                </div>
+                <BoardCtScatterChart items={items} sleDays={definition.settings.sleDays} />
+              </div>
+
+              {/* Throughput */}
+              <div className="rounded-lg p-3" style={{ background: "var(--bg-deeper)", border: "1px solid var(--border-faint)" }}>
+                <div className="text-[9px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
+                  Throughput
+                </div>
+                <BoardThroughputChart items={items} currentDay={currentDay} />
+              </div>
+
+              {/* Aging WIP by State */}
+              <div className="rounded-lg p-3" style={{ background: "var(--bg-deeper)", border: "1px solid var(--border-faint)" }}>
+                <div className="text-[9px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
+                  Aging WIP by Workflow State
+                </div>
+                <AgingByStateChart items={items} definition={definition} currentDay={currentDay} />
+              </div>
             </div>
           )}
         </div>
@@ -131,7 +181,7 @@ function SettingsDrawer({ actions }: { actions: BoardActions }) {
 
   return (
     <div className="w-[320px] flex-shrink-0 rounded-xl overflow-hidden flex flex-col"
-      style={{ background: "var(--bg-surface)", border: "1px solid var(--border-faint)", maxHeight: "calc(100vh - 280px)" }}>
+      style={{ background: "var(--bg-surface)", border: "1px solid var(--border-faint)", maxHeight: "calc(100vh - 160px)" }}>
 
       {/* Tabs */}
       <div className="flex border-b" style={{ borderColor: "var(--border-faint)" }}>
@@ -200,7 +250,7 @@ const inputStyle = { background: "var(--bg-deeper)", color: "var(--text-primary)
 // ─── Workflow Tab (full swimlane + column editor) ───────────
 
 function WorkflowTab({ actions }: { actions: BoardActions }) {
-  const { definition, updateDefinition, updateSwimlane, setLaneColumns, addSwimlane, removeSwimlane } = actions;
+  const { definition, updateDefinition, updateSwimlane, setLaneColumns, addSwimlane, removeSwimlane, moveSwimlane } = actions;
   const [expandedLane, setExpandedLane] = React.useState<string | null>(definition?.swimlanes[0]?.id ?? null);
   const [editingCol, setEditingCol] = React.useState<string | null>(null);
 
@@ -279,6 +329,14 @@ function WorkflowTab({ actions }: { actions: BoardActions }) {
                 <span className="text-[8px] font-mono" style={{ color: "var(--text-muted)" }}>
                   {wfCount}col {lane.wipLimit !== null ? `WIP${lane.wipLimit}` : ""}
                 </span>
+                {definition.swimlanes.length > 1 && (
+                  <div className="flex gap-0.5" onClick={(e) => e.stopPropagation()}>
+                    <span className="text-[9px] px-0.5 cursor-pointer hover:opacity-70" style={{ color: "var(--text-muted)" }}
+                      onClick={() => moveSwimlane(lane.id, -1)} title="Move up">{"\u25B2"}</span>
+                    <span className="text-[9px] px-0.5 cursor-pointer hover:opacity-70" style={{ color: "var(--text-muted)" }}
+                      onClick={() => moveSwimlane(lane.id, 1)} title="Move down">{"\u25BC"}</span>
+                  </div>
+                )}
                 <span className="text-[9px]" style={{ color: "var(--text-muted)" }}>{isExpanded ? "\u25B2" : "\u25BC"}</span>
               </button>
 
@@ -690,10 +748,12 @@ function ItemsTab({ actions }: { actions: BoardActions }) {
 // ─── Settings Tab ───────────────────────────────────────────
 
 function SettingsTab({ actions }: { actions: BoardActions }) {
-  const { definition, updateSettings } = actions;
+  const { definition, updateSettings, updateAutoSim, runMode } = actions;
   if (!definition) return null;
 
   const s = definition.settings;
+  const sim = s.autoSim;
+  const isAuto = runMode === "auto";
 
   return (
     <div className="flex flex-col gap-3">
@@ -717,20 +777,74 @@ function SettingsTab({ actions }: { actions: BoardActions }) {
       <div className="rounded-lg px-2 py-1.5 text-[9px]" style={{ background: "rgba(6,182,212,0.05)", color: "var(--text-secondary)" }}>
         &ldquo;We expect {s.slePercentile}% of items to complete within {s.sleDays} days.&rdquo;
       </div>
+
       <hr className="border-none h-px" style={{ background: "var(--border-faint)" }} />
-      <div className="text-[8px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Simulation</div>
-      <div>
-        <label className="text-[8px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Arrival Rate (items/day)</label>
-        <input type="number" min={0} max={10} step={0.5} value={s.arrivalRate}
-          onChange={(e) => updateSettings({ arrivalRate: parseFloat(e.target.value) || 2 })}
-          className="w-full rounded-md px-2 py-1.5 text-[11px] border-none" style={inputStyle} />
+      <div className="text-[8px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+        Arrival Rate
       </div>
       <div>
-        <label className="text-[8px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Processing Chance (%/day)</label>
-        <input type="number" min={5} max={95} step={5} value={Math.round(s.processingChance * 100)}
-          onChange={(e) => updateSettings({ processingChance: (parseInt(e.target.value) || 40) / 100 })}
+        <label className="text-[8px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Items/day (Poisson)</label>
+        <input type="number" min={0} max={10} step={0.1} value={s.arrivalRate}
+          onChange={(e) => updateSettings({ arrivalRate: parseFloat(e.target.value) || 0.8 })}
           className="w-full rounded-md px-2 py-1.5 text-[11px] border-none" style={inputStyle} />
       </div>
+
+      {/* Auto-sim settings (only shown in auto mode) */}
+      {isAuto && sim && (
+        <>
+          <hr className="border-none h-px" style={{ background: "var(--border-faint)" }} />
+          <div className="text-[8px] font-bold uppercase tracking-wider" style={{ color: "#8b5cf6" }}>
+            Simulation Dynamics
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[7px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Mean days/column</label>
+              <input type="number" min={1} max={20} step={0.5} value={sim.meanProcessingDays}
+                onChange={(e) => updateAutoSim({ meanProcessingDays: parseFloat(e.target.value) || 3 })}
+                className="w-full rounded-md px-2 py-1 text-[10px] border-none" style={inputStyle} />
+            </div>
+            <div>
+              <label className="text-[7px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Std deviation</label>
+              <input type="number" min={0.5} max={10} step={0.5} value={sim.stdDevProcessingDays}
+                onChange={(e) => updateAutoSim({ stdDevProcessingDays: parseFloat(e.target.value) || 1.5 })}
+                className="w-full rounded-md px-2 py-1 text-[10px] border-none" style={inputStyle} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[7px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Block chance (%)</label>
+              <input type="number" min={0} max={50} step={1} value={Math.round(sim.blockChance * 100)}
+                onChange={(e) => updateAutoSim({ blockChance: (parseInt(e.target.value) || 0) / 100 })}
+                className="w-full rounded-md px-2 py-1 text-[10px] border-none" style={inputStyle} />
+            </div>
+            <div>
+              <label className="text-[7px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Blocker days</label>
+              <input type="number" min={1} max={10} value={sim.blockerEffort}
+                onChange={(e) => updateAutoSim({ blockerEffort: parseInt(e.target.value) || 2 })}
+                className="w-full rounded-md px-2 py-1 text-[10px] border-none" style={inputStyle} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[7px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Regulatory (%)</label>
+              <input type="number" min={0} max={20} step={1} value={Math.round(sim.regulatoryChance * 100)}
+                onChange={(e) => updateAutoSim({ regulatoryChance: (parseInt(e.target.value) || 0) / 100 })}
+                className="w-full rounded-md px-2 py-1 text-[10px] border-none" style={inputStyle} />
+            </div>
+            <div>
+              <label className="text-[7px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Due in (days)</label>
+              <input type="number" min={3} max={60} value={sim.regulatoryDueDayOffset}
+                onChange={(e) => updateAutoSim({ regulatoryDueDayOffset: parseInt(e.target.value) || 10 })}
+                className="w-full rounded-md px-2 py-1 text-[10px] border-none" style={inputStyle} />
+            </div>
+          </div>
+          <div className="rounded-lg px-2 py-1.5 text-[8px] leading-relaxed" style={{ background: "rgba(139,92,246,0.04)", color: "var(--text-secondary)" }}>
+            Items take ~{sim.meanProcessingDays}&plusmn;{sim.stdDevProcessingDays} days per active column.
+            {sim.blockChance > 0 && ` ${Math.round(sim.blockChance * 100)}% blocker chance (${sim.blockerEffort}d to clear).`}
+            {sim.regulatoryChance > 0 && ` Regulatory items appear ~${Math.round(sim.regulatoryChance * 100)}% of days with ${sim.regulatoryDueDayOffset}d deadline.`}
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -3,11 +3,18 @@
  *
  * All functions are pure: state in, new state out. No side effects.
  *
- * Round mechanics:
- *  1. Arrivals: random items appear in backlog
- *  2. Processing: items in active columns have a chance of completing
- *  3. Pull: completed items move to next column (respecting WIP limits)
- *  4. Snapshot: board snapshot taken for charting
+ * Two run modes:
+ *  Manual — player drags items, advance day only takes snapshots
+ *  Auto   — realistic simulation with work-unit processing, blockers,
+ *           classes of service, and right-to-left pull mechanics
+ *
+ * Auto mode round mechanics:
+ *  1. Arrivals: Poisson arrivals + random regulatory items
+ *  2. Blocker resolution: blocked items count down effort
+ *  3. Processing: items decrement work remaining (normal distribution per column)
+ *  4. Pull: completed items move right-to-left (respecting WIP limits)
+ *  5. New blockers: random chance of blocking active items
+ *  6. Snapshot: board snapshot taken for charting
  */
 
 import type {
@@ -17,6 +24,7 @@ import type {
   ColumnDefinition,
   SwimlaneDefinition,
   StateTransition,
+  ClassOfService,
 } from "@/types/board";
 import { getWorkflowColumns } from "@/types/board";
 import { takeBoardSnapshot } from "@/lib/stats/board-stats";
@@ -30,6 +38,7 @@ function seededRandom(): number {
 }
 
 function poisson(lambda: number): number {
+  if (lambda <= 0) return 0;
   const L = Math.exp(-lambda);
   let k = 0;
   let p = 1;
@@ -40,6 +49,14 @@ function poisson(lambda: number): number {
   return k - 1;
 }
 
+/** Box-Muller normal distribution. Returns max(1, round(value)). */
+function normalRandom(mean: number, stdDev: number): number {
+  const u1 = seededRandom();
+  const u2 = seededRandom();
+  const z = Math.sqrt(-2 * Math.log(u1 || 0.001)) * Math.cos(2 * Math.PI * u2);
+  return Math.max(1, Math.round(mean + stdDev * z));
+}
+
 // ─── Item Creation ──────────────────────────────────────────
 
 /** Create a new work item and add it to backlog */
@@ -48,6 +65,8 @@ export function createWorkItem(
   typeId: string,
   swimlaneId: string,
   title?: string,
+  classOfService: ClassOfService = "standard",
+  dueDay: number | null = null,
 ): BoardState {
   const { definition: def, items, nextItemNumber, currentDay } = state;
   const itemType = def.itemTypes.find((t) => t.id === typeId);
@@ -56,11 +75,16 @@ export function createWorkItem(
   const backlogCol = laneCols.find((c) => c.type === "backlog");
   if (!backlogCol || !itemType) return state;
 
-  const id = `${itemType.name.substring(0, 3).toUpperCase()}-${nextItemNumber}`;
+  const prefix = classOfService === "regulatory" ? "REG"
+    : classOfService === "expedite" ? "EXP"
+    : itemType.name.substring(0, 3).toUpperCase();
+  const id = `${prefix}-${nextItemNumber}`;
 
   const newItem: BoardWorkItem = {
     id,
-    title: title ?? `${itemType.name} #${nextItemNumber}`,
+    title: title ?? (classOfService === "regulatory"
+      ? `Regulatory #${nextItemNumber}`
+      : `${itemType.name} #${nextItemNumber}`),
     typeId,
     columnId: backlogCol.id,
     subColumnId: null,
@@ -81,8 +105,12 @@ export function createWorkItem(
     createdDay: currentDay,
     commitDay: null,
     doneDay: null,
-    dueDay: null,
+    dueDay,
     order: items.filter((it) => it.columnId === backlogCol.id && it.swimlaneId === swimlaneId).length,
+    classOfService,
+    workRemaining: 0,
+    workTotal: 0,
+    blockerEffort: 0,
   };
 
   return {
@@ -184,9 +212,20 @@ export function moveItem(
   if (targetCol.type === "done" && doneDay === null) {
     doneDay = currentDay;
   }
-  // If moving back from done, clear doneDay
   if (targetCol.type !== "done" && doneDay !== null) {
     doneDay = null;
+  }
+
+  // Assign work for auto mode when entering an active column
+  let workRemaining = item.workRemaining;
+  let workTotal = item.workTotal;
+  if (state.runMode === "auto" && targetCol.type === "active") {
+    const sim = state.definition.settings.autoSim;
+    workRemaining = normalRandom(sim.meanProcessingDays, sim.stdDevProcessingDays);
+    workTotal = workRemaining;
+  } else if (targetCol.type === "queue" || targetCol.type === "done" || targetCol.type === "backlog") {
+    workRemaining = 0;
+    workTotal = 0;
   }
 
   const updatedItem: BoardWorkItem = {
@@ -196,6 +235,8 @@ export function moveItem(
     stateHistory: updatedHistory,
     commitDay,
     doneDay,
+    workRemaining,
+    workTotal,
   };
 
   return {
@@ -204,73 +245,198 @@ export function moveItem(
   };
 }
 
-// ─── Round Simulation ───────────────────────────────────────
+// ─── Manual Mode Processing ─────────────────────────────────
 
-/** Generate random arrivals into backlog */
-export function generateArrivals(state: BoardState): BoardState {
+/** Manual mode: advance day only takes a snapshot, no auto-processing */
+function advanceManual(state: BoardState): BoardState {
+  const snapshot = takeBoardSnapshot(state);
+  const MAX_SNAPSHOTS = 200;
+  const snaps = [...state.snapshots, snapshot];
+  return { ...state, snapshots: snaps.length > MAX_SNAPSHOTS ? snaps.slice(-MAX_SNAPSHOTS) : snaps };
+}
+
+// ─── Auto Mode Processing ───────────────────────────────────
+
+/** Process items in auto mode: work-unit model with blockers and pull */
+function processItemsAuto(state: BoardState): BoardState {
   const { definition: def } = state;
-  if (def.itemTypes.length === 0) return state;
-
-  const count = poisson(def.settings.arrivalRate);
+  const sim = def.settings.autoSim;
   let s = state;
 
-  for (let i = 0; i < count; i++) {
-    // Pick random item type
-    const typeIdx = Math.floor(seededRandom() * def.itemTypes.length);
-    const type = def.itemTypes[typeIdx];
+  // Phase 1: Resolve blockers (decrement effort)
+  s = {
+    ...s,
+    items: s.items.map((item) => {
+      if (!item.blocked || item.blockerEffort <= 0) return item;
+      const newEffort = item.blockerEffort - 1;
+      if (newEffort <= 0) {
+        return { ...item, blocked: false, blockerDescription: "", blockerEffort: 0 };
+      }
+      return { ...item, blockerEffort: newEffort };
+    }),
+  };
 
-    // Pick swimlane: use default if set, otherwise random
-    let swimlaneId = type.defaultSwimlane;
-    if (!swimlaneId || !def.swimlanes.some((l) => l.id === swimlaneId)) {
-      // Default to first non-expedite lane, or just first lane
-      const standardLane = def.swimlanes.find((l) => !l.name.toLowerCase().includes("expedite"));
-      swimlaneId = standardLane?.id ?? def.swimlanes[0]?.id ?? "default";
+  // Phase 2: Decrement work on active items (not blocked)
+  s = {
+    ...s,
+    items: s.items.map((item) => {
+      if (item.blocked || item.workRemaining <= 0 || item.doneDay !== null) return item;
+      return { ...item, workRemaining: item.workRemaining - 1 };
+    }),
+  };
+
+  // Phase 3: Pull right-to-left (same swimlane logic as before)
+  for (const lane of def.swimlanes) {
+    const laneCols = lane.columns?.length ? lane.columns : def.columns;
+    const workflowCols = laneCols.filter((c) => c.type !== "backlog" && c.type !== "done");
+    const doneCol = laneCols.find((c) => c.type === "done");
+
+    // Process columns from right to left
+    for (let ci = workflowCols.length - 1; ci >= 0; ci--) {
+      const col = workflowCols[ci];
+      const nextCol = ci < workflowCols.length - 1 ? workflowCols[ci + 1] : doneCol;
+      if (!nextCol) continue;
+
+      // Get items in this column for this lane, sorted: oldest first for fair pulling
+      const colItems = s.items
+        .filter((it) => it.columnId === col.id && it.swimlaneId === lane.id && it.doneDay === null)
+        .sort((a, b) => (a.commitDay ?? a.createdDay) - (b.commitDay ?? b.createdDay));
+
+      for (const item of colItems) {
+        // Handle sub-columns: doing → done split
+        if (col.subColumns.length > 0) {
+          const doingSub = col.subColumns.find((sc) => sc.type === "active");
+          const doneSub = col.subColumns.find((sc) => sc.type === "queue");
+
+          // Item in "doing" sub: move to "done" sub when work complete
+          if (item.subColumnId === doingSub?.id && doneSub && item.workRemaining <= 0 && !item.blocked) {
+            s = moveItem(s, item.id, col.id, doneSub.id);
+            continue;
+          }
+
+          // Item in "done" sub (queue): try to pull to next column
+          if (item.subColumnId === doneSub?.id) {
+            const check = canMoveItem(s, item.id, nextCol.id);
+            if (check.allowed) {
+              const firstSub = nextCol.subColumns.find((sc) => sc.type === "active");
+              s = moveItem(s, item.id, nextCol.id, firstSub?.id ?? null);
+            }
+            continue;
+          }
+        }
+
+        // Simple column (no sub-columns): move when work complete
+        if (item.workRemaining <= 0 && !item.blocked) {
+          if (col.type === "active") {
+            const check = canMoveItem(s, item.id, nextCol.id);
+            if (check.allowed) {
+              const firstSub = nextCol.subColumns.find((sc) => sc.type === "active");
+              s = moveItem(s, item.id, nextCol.id, firstSub?.id ?? null);
+            }
+          } else if (col.type === "queue") {
+            const check = canMoveItem(s, item.id, nextCol.id);
+            if (check.allowed) {
+              const firstSub = nextCol.subColumns.find((sc) => sc.type === "active");
+              s = moveItem(s, item.id, nextCol.id, firstSub?.id ?? null);
+            }
+          }
+        }
+      }
     }
 
-    s = createWorkItem(s, type.id, swimlaneId);
+    // Pull from backlog into first workflow column (with priority ordering)
+    const backlogCol = laneCols.find((c) => c.type === "backlog");
+    const firstWorkCol = workflowCols[0];
+    if (backlogCol && firstWorkCol) {
+      const backlogItems = s.items
+        .filter((it) => it.columnId === backlogCol.id && it.swimlaneId === lane.id)
+        .sort((a, b) => {
+          // Priority: expedite first, then regulatory (by due date), then standard (by age)
+          const priority = (cls: ClassOfService) =>
+            cls === "expedite" ? 0 : cls === "regulatory" ? 1 : 2;
+          const pa = priority(a.classOfService ?? "standard");
+          const pb = priority(b.classOfService ?? "standard");
+          if (pa !== pb) return pa - pb;
+          // Within regulatory, sort by due date (soonest first)
+          if (a.classOfService === "regulatory" && b.classOfService === "regulatory") {
+            return (a.dueDay ?? Infinity) - (b.dueDay ?? Infinity);
+          }
+          // Otherwise by age (oldest first = lowest createdDay)
+          return a.createdDay - b.createdDay;
+        });
+
+      for (const item of backlogItems) {
+        const check = canMoveItem(s, item.id, firstWorkCol.id);
+        if (check.allowed) {
+          const firstSub = firstWorkCol.subColumns.find((sc) => sc.type === "active");
+          s = moveItem(s, item.id, firstWorkCol.id, firstSub?.id ?? null);
+        }
+      }
+    }
+  }
+
+  // Phase 4: Apply new blockers
+  const activeItems = s.items.filter(
+    (it) => !it.blocked && it.doneDay === null && it.commitDay !== null && it.workRemaining > 0,
+  );
+  for (const item of activeItems) {
+    if (seededRandom() < sim.blockChance) {
+      s = {
+        ...s,
+        items: s.items.map((it) =>
+          it.id === item.id
+            ? { ...it, blocked: true, blockerDescription: "Dependency / impediment", blockerEffort: sim.blockerEffort }
+            : it,
+        ),
+      };
+    }
+  }
+
+  // Phase 5: Generate regulatory items at random
+  if (sim.regulatoryChance > 0 && seededRandom() < sim.regulatoryChance && def.itemTypes.length > 0) {
+    const typeIdx = Math.floor(seededRandom() * def.itemTypes.length);
+    const type = def.itemTypes[typeIdx];
+    const standardLane = def.swimlanes.find((l) => !l.name.toLowerCase().includes("expedite"));
+    const laneId = standardLane?.id ?? def.swimlanes[0]?.id ?? "default";
+    const dueDay = s.currentDay + sim.regulatoryDueDayOffset;
+    s = createWorkItem(s, type.id, laneId, undefined, "regulatory", dueDay);
   }
 
   return s;
 }
 
-/** Process items: items in active columns may complete their stage */
-function processItems(state: BoardState): BoardState {
-  const { definition: def, currentDay } = state;
+// ─── Legacy Mode Processing (original probability model) ────
+
+/** Original processing for backward compat in manual mode advance */
+function processItemsLegacy(state: BoardState): BoardState {
+  const { definition: def } = state;
   let s = state;
 
-  // Process each swimlane independently
   for (const lane of def.swimlanes) {
     const laneCols = lane.columns?.length ? lane.columns : def.columns;
     const workflowCols = laneCols.filter((c) => c.type !== "backlog" && c.type !== "done");
 
-    // Process columns from right to left (pull system - downstream pulls first)
     for (let ci = workflowCols.length - 1; ci >= 0; ci--) {
       const col = workflowCols[ci];
       const nextCol = ci < workflowCols.length - 1 ? workflowCols[ci + 1] : laneCols.find((c) => c.type === "done");
-
       if (!nextCol) continue;
 
-      // Find items in this column for this lane
       const colItems = s.items.filter(
         (it) => it.columnId === col.id && it.swimlaneId === lane.id && it.doneDay === null,
       );
 
       for (const item of colItems) {
-        // Active columns: items have a chance of completing
         if (col.type === "active" || (col.subColumns.length > 0 && item.subColumnId)) {
           const roll = seededRandom();
           if (roll < def.settings.processingChance) {
-            // If column has sub-columns and item is in "doing", move to "done" sub-column first
             if (col.subColumns.length > 0) {
               const doingSub = col.subColumns.find((sc) => sc.type === "active");
               const doneSub = col.subColumns.find((sc) => sc.type === "queue");
               if (item.subColumnId === doingSub?.id && doneSub) {
-                // Move to done sub-column (queue)
                 s = moveItem(s, item.id, col.id, doneSub.id);
                 continue;
               }
             }
-            // Try to move to next column
             const check = canMoveItem(s, item.id, nextCol.id);
             if (check.allowed) {
               const firstSub = nextCol.subColumns.find((sc) => sc.type === "active");
@@ -278,7 +444,6 @@ function processItems(state: BoardState): BoardState {
             }
           }
         } else if (col.type === "queue") {
-          // Queue columns: try to pull to next active column
           const check = canMoveItem(s, item.id, nextCol.id);
           if (check.allowed) {
             const firstSub = nextCol.subColumns.find((sc) => sc.type === "active");
@@ -288,7 +453,6 @@ function processItems(state: BoardState): BoardState {
       }
     }
 
-    // Pull from backlog into first workflow column
     const backlogCol = laneCols.find((c) => c.type === "backlog");
     const firstWorkCol = workflowCols[0];
     if (backlogCol && firstWorkCol) {
@@ -308,20 +472,65 @@ function processItems(state: BoardState): BoardState {
   return s;
 }
 
-/** Advance one round (day): arrivals → processing → snapshot */
+// ─── Round Advancement ──────────────────────────────────────
+
+/** Generate random arrivals into backlog */
+export function generateArrivals(state: BoardState): BoardState {
+  // Manual mode: no auto arrivals
+  if (state.runMode === "manual") return state;
+
+  const { definition: def } = state;
+  if (def.itemTypes.length === 0) return state;
+
+  const count = poisson(def.settings.arrivalRate);
+  let s = state;
+
+  for (let i = 0; i < count; i++) {
+    const typeIdx = Math.floor(seededRandom() * def.itemTypes.length);
+    const type = def.itemTypes[typeIdx];
+
+    let swimlaneId = type.defaultSwimlane;
+    if (!swimlaneId || !def.swimlanes.some((l) => l.id === swimlaneId)) {
+      const standardLane = def.swimlanes.find((l) => !l.name.toLowerCase().includes("expedite"));
+      swimlaneId = standardLane?.id ?? def.swimlanes[0]?.id ?? "default";
+    }
+
+    s = createWorkItem(s, type.id, swimlaneId);
+  }
+
+  return s;
+}
+
+/** Advance one round (day) */
 export function advanceRound(state: BoardState): BoardState {
+  const runMode = state.runMode ?? "manual";
   let s = { ...state, currentDay: state.currentDay + 1 };
 
-  // 1. Generate arrivals
-  s = generateArrivals(s);
+  if (runMode === "auto") {
+    // Auto mode: arrivals → auto processing → snapshot
+    s = generateArrivals(s);
+    s = processItemsAuto(s);
+  } else {
+    // Manual mode: just take snapshot (player controls everything)
+    s = advanceManual(s);
+    return s;
+  }
 
-  // 2. Process items (pull from right to left)
-  s = processItems(s);
-
-  // 3. Take snapshot
   const snapshot = takeBoardSnapshot(s);
-  s = { ...s, snapshots: [...s.snapshots, snapshot] };
+  // Cap snapshots to prevent unbounded memory growth
+  const MAX_SNAPSHOTS = 200;
+  const snaps = [...s.snapshots, snapshot];
 
+  // Trim stateHistory on long-done items to reduce memory
+  const items = s.items.map((it) => {
+    if (it.doneDay !== null && it.stateHistory.length > 2 && s.currentDay - it.doneDay > 30) {
+      // Keep only first and last transition for completed items
+      return { ...it, stateHistory: [it.stateHistory[0], it.stateHistory[it.stateHistory.length - 1]] };
+    }
+    return it;
+  });
+
+  s = { ...s, items, snapshots: snaps.length > MAX_SNAPSHOTS ? snaps.slice(-MAX_SNAPSHOTS) : snaps };
   return s;
 }
 
