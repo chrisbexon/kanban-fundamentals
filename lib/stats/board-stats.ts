@@ -34,7 +34,13 @@ import type {
 
 // ─── Cycle Time ─────────────────────────────────────────────
 
-/** Scatter plot: cycle time per completed item */
+export interface BoardCycleTimePoint extends CycleTimePoint {
+  wasBlocked: boolean;
+  isExpedite: boolean;
+  classOfService: string;
+}
+
+/** Scatter plot: cycle time per completed item, with blocked/expedite flags */
 export function cycleTimeScatter(items: BoardWorkItem[]): CycleTimePoint[] {
   return items
     .filter((it) => it.commitDay !== null && it.doneDay !== null)
@@ -42,6 +48,22 @@ export function cycleTimeScatter(items: BoardWorkItem[]): CycleTimePoint[] {
       itemId: it.id,
       cycleTime: it.doneDay! - it.commitDay!,
       dayDone: it.doneDay!,
+    }))
+    .sort((a, b) => a.dayDone - b.dayDone);
+}
+
+/** Extended scatter with blocked/expedite metadata for board designer chart.
+ *  Only flags "wasBlocked" if the item spent 2+ days blocked (significant impact). */
+export function cycleTimeScatterExtended(items: BoardWorkItem[]): BoardCycleTimePoint[] {
+  return items
+    .filter((it) => it.commitDay !== null && it.doneDay !== null)
+    .map((it) => ({
+      itemId: it.id,
+      cycleTime: it.doneDay! - it.commitDay!,
+      dayDone: it.doneDay!,
+      wasBlocked: (it.blockedDays ?? 0) >= 2,
+      isExpedite: it.classOfService === "expedite",
+      classOfService: it.classOfService ?? "standard",
     }))
     .sort((a, b) => a.dayDone - b.dayDone);
 }
@@ -96,15 +118,19 @@ export function throughputPerDay(
 
 // ─── CFD (Generic) ──────────────────────────────────────────
 
-/** Cumulative Flow Diagram with dynamic columns */
+/** Cumulative Flow Diagram with dynamic columns. Optionally filter by swimlane. */
 export function cfdData(
   snapshots: BoardSnapshot[],
   def: BoardDefinition,
+  swimlaneId?: string | null,
 ): GenericCfdPoint[] {
   return snapshots.map((snap) => {
     const point: GenericCfdPoint = { day: snap.day };
+    const source = swimlaneId && snap.itemsBySwimlane?.[swimlaneId]
+      ? snap.itemsBySwimlane[swimlaneId]
+      : snap.itemsByColumn;
     for (const col of def.columns) {
-      point[col.id] = snap.itemsByColumn[col.id] ?? 0;
+      point[col.id] = source[col.id] ?? 0;
     }
     return point;
   });
@@ -366,6 +392,17 @@ export function takeBoardSnapshot(
       ) / 10
     : 0;
 
+  // Per-swimlane item counts
+  const itemsBySwimlane: Record<string, Record<string, number>> = {};
+  for (const lane of def.swimlanes) {
+    const laneCounts: Record<string, number> = {};
+    const laneCols = lane.columns?.length ? lane.columns : def.columns;
+    for (const col of laneCols) {
+      laneCounts[col.id] = items.filter((it) => it.columnId === col.id && it.swimlaneId === lane.id).length;
+    }
+    itemsBySwimlane[lane.id] = laneCounts;
+  }
+
   return {
     day: currentDay,
     itemsByColumn,
@@ -375,5 +412,6 @@ export function takeBoardSnapshot(
     itemsDone: doneItems.length,
     totalItems: items.length,
     avgAge,
+    itemsBySwimlane,
   };
 }

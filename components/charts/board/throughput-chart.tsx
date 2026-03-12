@@ -17,14 +17,15 @@ import { CHART_TOOLTIP, CHART_GRID, CHART_AXIS, CHART_TICK, CHART_LABEL } from "
 interface BoardThroughputChartProps {
   items: BoardWorkItem[];
   currentDay: number;
+  height?: number;
 }
 
-export function BoardThroughputChart({ items, currentDay }: BoardThroughputChartProps) {
+export function BoardThroughputChart({ items, currentDay, height = 240 }: BoardThroughputChartProps) {
   const data = throughputPerDay(items, 1, currentDay);
   if (data.length < 2) return null;
 
   return (
-    <ResponsiveContainer width="100%" height={240}>
+    <ResponsiveContainer width="100%" height={height}>
       <ComposedChart data={data} margin={{ top: 5, right: 10, bottom: 20, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
         <XAxis

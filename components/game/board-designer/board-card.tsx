@@ -11,6 +11,7 @@ interface BoardCardProps {
   settings: BoardSettings;
   runMode: RunMode;
   onDragStart: (e: React.DragEvent, itemId: string) => void;
+  onTouchStart?: (itemId: string, e: React.TouchEvent) => void;
 }
 
 /** Continuous age color based on % of SLE target */
@@ -23,7 +24,7 @@ function ageBorderColor(age: number, sleDays: number): string {
   return "#ef4444";                       // red: breaching SLE
 }
 
-export function BoardCard({ item, itemType, currentDay, settings, runMode, onDragStart }: BoardCardProps) {
+export function BoardCard({ item, itemType, currentDay, settings, runMode, onDragStart, onTouchStart }: BoardCardProps) {
   const age = itemAge(item, currentDay);
   const isCommitted = item.commitDay !== null;
   const isDone = item.doneDay !== null;
@@ -44,6 +45,7 @@ export function BoardCard({ item, itemType, currentDay, settings, runMode, onDra
     <div
       draggable={runMode === "manual"}
       onDragStart={(e) => onDragStart(e, item.id)}
+      onTouchStart={onTouchStart ? (e) => onTouchStart(item.id, e) : undefined}
       className="rounded-lg overflow-hidden flex-shrink-0 transition-all hover:scale-[1.02]"
       style={{
         background: "var(--bg-surface)",
@@ -59,18 +61,18 @@ export function BoardCard({ item, itemType, currentDay, settings, runMode, onDra
         {/* Row 1: Type badge + ID + Class of service */}
         <div className="flex items-center gap-1 mb-0.5">
           <span className="text-[9px]">{itemType?.icon ?? "\u{1F4E6}"}</span>
-          <span className="text-[7px] font-bold font-mono uppercase" style={{ color }}>
+          <span className="text-[8px] font-bold font-mono uppercase" style={{ color }}>
             {item.id}
           </span>
           {/* Class of service badge */}
           {cls === "regulatory" && (
-            <span className="text-[6px] font-bold px-1 rounded ml-auto"
+            <span className="text-[7px] font-bold px-1 rounded ml-auto"
               style={{ background: "rgba(139,92,246,0.12)", color: "#8b5cf6" }}>
               REG
             </span>
           )}
           {cls === "expedite" && (
-            <span className="text-[6px] font-bold px-1 rounded ml-auto"
+            <span className="text-[7px] font-bold px-1 rounded ml-auto"
               style={{ background: "rgba(239,68,68,0.12)", color: "#ef4444" }}>
               EXP
             </span>
@@ -96,15 +98,15 @@ export function BoardCard({ item, itemType, currentDay, settings, runMode, onDra
         {/* Age + due date */}
         {isCommitted && !isDone && (
           <div className="flex items-center gap-1 mt-0.5">
-            <div className="text-[7px] font-mono font-bold px-0.5 rounded"
+            <div className="text-[8px] font-mono font-bold px-0.5 rounded"
               style={{ color: borderColor, background: sleBreaching ? `${borderColor}12` : "transparent" }}>
               {age}d
             </div>
             {sleBreaching && (
-              <span className="text-[6px] font-bold" style={{ color: "#ef4444" }}>SLE</span>
+              <span className="text-[7px] font-bold" style={{ color: "#ef4444" }}>SLE</span>
             )}
             {item.dueDay !== null && (
-              <span className="text-[6px] font-bold ml-auto"
+              <span className="text-[7px] font-bold ml-auto"
                 style={{ color: dueAtRisk ? "#ef4444" : "var(--text-muted)" }}>
                 Due d{item.dueDay}
               </span>
@@ -114,14 +116,14 @@ export function BoardCard({ item, itemType, currentDay, settings, runMode, onDra
 
         {/* Done indicator */}
         {isDone && (
-          <div className="text-[7px] font-bold mt-0.5" style={{ color: "#22c55e" }}>
+          <div className="text-[8px] font-bold mt-0.5" style={{ color: "#22c55e" }}>
             &#x2713; {item.doneDay! - (item.commitDay ?? item.doneDay!)}d
           </div>
         )}
 
         {/* Blocked indicator */}
         {item.blocked && (
-          <div className="text-[6px] font-bold mt-0.5 px-1 rounded" style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444" }}>
+          <div className="text-[7px] font-bold mt-0.5 px-1 rounded" style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444" }}>
             BLOCKED{isAuto && item.blockerEffort > 0 ? ` (${item.blockerEffort}d)` : ""}
           </div>
         )}

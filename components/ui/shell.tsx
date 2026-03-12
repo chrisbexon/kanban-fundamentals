@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { ThemeToggle } from "./theme-toggle";
+import { BackToDashboard } from "./back-to-dashboard";
 
 interface ShellProps {
   children: ReactNode;
@@ -18,6 +19,7 @@ export function Shell({ children }: ShellProps) {
         <ThemeToggle />
       </div>
       <div className="max-w-[1800px] mx-auto px-6 py-3">
+        <BackToDashboard />
         {children}
       </div>
     </div>

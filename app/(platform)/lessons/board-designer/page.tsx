@@ -41,6 +41,7 @@ function tplBoard(
     swimlanes: [{
       id: "default", name: "Standard", color: "#64748b",
       wipLimit: null, order: 0, policy: "", columns,
+      expediteEnabled: false, expediteWipLimit: null, expeditePolicy: "",
     }],
     itemTypes,
     settings: { ...DEFAULT_BOARD_SETTINGS, ...settings },

@@ -15,11 +15,12 @@ interface BoardColumnProps {
   onDrop: (columnId: string, subColumnId: string | null) => void;
   canDrop: (columnId: string) => { allowed: boolean; reason: string };
   dragActive: boolean;
+  onTouchItemStart?: (itemId: string, e: React.TouchEvent) => void;
 }
 
 export function BoardColumn({
   column, items, itemTypes, currentDay, settings, runMode,
-  onDragStart, onDrop, canDrop, dragActive,
+  onDragStart, onDrop, canDrop, dragActive, onTouchItemStart,
 }: BoardColumnProps) {
   const [dragOver, setDragOver] = useState(false);
   const c = column;
@@ -77,6 +78,7 @@ export function BoardColumn({
                 onDrop={() => onDrop(c.id, sc.id)}
                 canDrop={scDropCheck.allowed}
                 dragActive={dragActive}
+                onTouchItemStart={onTouchItemStart}
               />
             );
           })}
@@ -88,6 +90,7 @@ export function BoardColumn({
   // Simple column (no sub-columns)
   return (
     <div
+      data-drop-column={c.id}
       className="flex-1 min-w-[100px] min-h-0 flex flex-col rounded-lg transition-all"
       style={{
         background: dragOver && dropCheck.allowed
@@ -114,7 +117,7 @@ export function BoardColumn({
           </div>
         )}
         {c.policy && (
-          <div className="text-[7px] mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>{c.policy}</div>
+          <div className="text-[8px] mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>{c.policy}</div>
         )}
       </div>
 
@@ -129,6 +132,7 @@ export function BoardColumn({
             settings={settings}
             runMode={runMode}
             onDragStart={onDragStart}
+            onTouchStart={onTouchItemStart}
           />
         ))}
       </div>
@@ -140,7 +144,7 @@ export function BoardColumn({
         </div>
       )}
       {dragActive && !dropCheck.allowed && (
-        <div className="text-[7px] text-center py-1 px-1" style={{ color: "#ef4444" }}>
+        <div className="text-[8px] text-center py-1 px-1" style={{ color: "#ef4444" }}>
           {dropCheck.reason}
         </div>
       )}
@@ -152,7 +156,7 @@ export function BoardColumn({
 
 function SubColumn({
   parentColumn, subColumn, items, itemTypes, currentDay, settings, runMode,
-  onDragStart, onDrop, canDrop, dragActive,
+  onDragStart, onDrop, canDrop, dragActive, onTouchItemStart,
 }: {
   parentColumn: ColumnDefinition;
   subColumn: { id: string; name: string; type: string; policy: string };
@@ -165,11 +169,14 @@ function SubColumn({
   onDrop: () => void;
   canDrop: boolean;
   dragActive: boolean;
+  onTouchItemStart?: (itemId: string, e: React.TouchEvent) => void;
 }) {
   const [dragOver, setDragOver] = useState(false);
 
   return (
     <div
+      data-drop-column={parentColumn.id}
+      data-drop-subcolumn={subColumn.id}
       className="flex-1 min-h-0 flex flex-col transition-all"
       style={{
         background: dragOver && canDrop ? `${parentColumn.color}08` : "transparent",
@@ -200,6 +207,7 @@ function SubColumn({
             settings={settings}
             runMode={runMode}
             onDragStart={onDragStart}
+            onTouchStart={onTouchItemStart}
           />
         ))}
       </div>

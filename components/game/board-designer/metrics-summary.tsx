@@ -6,10 +6,16 @@ import { dashboardMetrics } from "@/lib/stats/board-stats";
 
 interface MetricsSummaryProps {
   boardState: BoardState;
+  /** Override items for per-swimlane filtering */
+  filteredItems?: BoardState["items"];
+  /** Override definition (e.g. lane-specific columns) */
+  filteredDefinition?: BoardState["definition"];
 }
 
-export function MetricsSummary({ boardState }: MetricsSummaryProps) {
-  const { definition, items, currentDay } = boardState;
+export function MetricsSummary({ boardState, filteredItems, filteredDefinition }: MetricsSummaryProps) {
+  const definition = filteredDefinition ?? boardState.definition;
+  const items = filteredItems ?? boardState.items;
+  const currentDay = boardState.currentDay;
   const m = dashboardMetrics(items, definition, currentDay);
   const doneCount = items.filter((it) => it.doneDay !== null).length;
 

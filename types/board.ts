@@ -107,6 +107,15 @@ export interface SwimlaneDefinition {
    * may have entirely different workflows. Columns are ordered left → right.
    */
   columns: ColumnDefinition[];
+
+  /** Whether this lane has an expedite sub-lane enabled */
+  expediteEnabled: boolean;
+
+  /** WIP limit for the expedite sub-lane (across all columns). null = no limit. */
+  expediteWipLimit: number | null;
+
+  /** Policy for the expedite sub-lane */
+  expeditePolicy: string;
 }
 
 export interface ItemTypeDefinition {
@@ -139,6 +148,12 @@ export interface AutoSimSettings {
   regulatoryChance: number;
   /** Due day offset for regulatory items (days from creation) */
   regulatoryDueDayOffset: number;
+  /** Probability per round of an expedite item arriving (0-1). Only applies when expedite lane exists. */
+  expediteChance: number;
+  /** Work multiplier for expedite items (rushed work = more effort). Default 1.5. */
+  expediteWorkMultiplier: number;
+  /** Blocker chance multiplier for expedite items (context switching penalty). Default 2.0. */
+  expediteBlockerMultiplier: number;
 }
 
 export interface BoardSettings {
@@ -211,6 +226,9 @@ export interface BoardWorkItem {
 
   /** Blocker effort remaining in days (0 = not blocked via effort model) */
   blockerEffort: number;
+
+  /** Total days this item has spent blocked across its lifecycle */
+  blockedDays: number;
 }
 
 export interface StateTransition {
@@ -266,6 +284,9 @@ export interface BoardSnapshot {
 
   /** Average age of in-progress items */
   avgAge: number;
+
+  /** Per-swimlane item counts: swimlaneId → columnId → count */
+  itemsBySwimlane?: Record<string, Record<string, number>>;
 }
 
 // ─── Generic Chart Data ──────────────────────────────────────
@@ -284,10 +305,13 @@ export interface GenericCfdPoint {
 export const DEFAULT_AUTO_SIM: AutoSimSettings = {
   meanProcessingDays: 3,
   stdDevProcessingDays: 1.5,
-  blockChance: 0.15,
+  blockChance: 0.03,
   blockerEffort: 2,
   regulatoryChance: 0.03,
   regulatoryDueDayOffset: 10,
+  expediteChance: 0.05,
+  expediteWorkMultiplier: 1.5,
+  expediteBlockerMultiplier: 2.0,
 };
 
 export const DEFAULT_BOARD_SETTINGS: BoardSettings = {
@@ -309,6 +333,9 @@ export const DEFAULT_SWIMLANE: SwimlaneDefinition = {
   order: 0,
   policy: "",
   columns: [],
+  expediteEnabled: false,
+  expediteWipLimit: null,
+  expeditePolicy: "",
 };
 
 export function createDefaultBoard(): BoardDefinition {

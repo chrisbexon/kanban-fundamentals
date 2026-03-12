@@ -18,17 +18,19 @@ import { CHART_TOOLTIP, CHART_GRID, CHART_AXIS, CHART_TICK, CHART_LABEL } from "
 interface BoardCfdChartProps {
   snapshots: BoardSnapshot[];
   definition: BoardDefinition;
+  swimlaneId?: string;
+  height?: number;
 }
 
-export function BoardCfdChart({ snapshots, definition }: BoardCfdChartProps) {
-  const data = cfdData(snapshots, definition);
+export function BoardCfdChart({ snapshots, definition, swimlaneId, height = 240 }: BoardCfdChartProps) {
+  const data = cfdData(snapshots, definition, swimlaneId);
   if (data.length < 2) return null;
 
   // Build areas in reverse column order (first column = top of stack = drawn last)
   const cols = [...definition.columns].reverse();
 
   return (
-    <ResponsiveContainer width="100%" height={240}>
+    <ResponsiveContainer width="100%" height={height}>
       <AreaChart data={data} margin={{ top: 5, right: 10, bottom: 20, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
         <XAxis

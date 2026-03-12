@@ -80,11 +80,10 @@ export function ChatWidget({ lessonContext }: ChatWidgetProps) {
       {/* Chat panel */}
       {open && (
         <div
-          className="fixed bottom-20 right-4 z-50 rounded-2xl overflow-hidden flex flex-col"
+          className="fixed bottom-20 z-50 rounded-2xl overflow-hidden flex flex-col right-2 left-2 sm:left-auto sm:right-4 sm:w-[380px]"
           style={{
-            width: 380,
-            height: 520,
-            maxHeight: "calc(100vh - 120px)",
+            height: "min(520px, calc(100vh - 120px))",
+            maxWidth: 420,
             background: "var(--bg-page-mid, #0d1424)",
             border: "1px solid var(--border-subtle, rgba(255,255,255,0.1))",
             boxShadow: "0 20px 60px rgba(0,0,0,0.5)",

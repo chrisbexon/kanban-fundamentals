@@ -65,6 +65,12 @@ export function useBoardDesigner() {
             const { DEFAULT_AUTO_SIM } = require("@/types/board");
             parsed.definition.settings.autoSim = { ...DEFAULT_AUTO_SIM };
           }
+          // Migrate swimlanes: ensure expedite fields exist
+          for (const lane of parsed.definition.swimlanes) {
+            if (lane.expediteEnabled === undefined) lane.expediteEnabled = false;
+            if (lane.expediteWipLimit === undefined) lane.expediteWipLimit = null;
+            if (lane.expeditePolicy === undefined) lane.expeditePolicy = "";
+          }
           setBoardState(parsed);
         }
       }

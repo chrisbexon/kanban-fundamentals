@@ -111,6 +111,7 @@ export function createWorkItem(
     workRemaining: 0,
     workTotal: 0,
     blockerEffort: 0,
+    blockedDays: 0,
   };
 
   return {
@@ -142,8 +143,10 @@ export function canMoveItem(
     return { allowed: true, reason: "" };
   }
 
-  // Check column WIP limit
-  if (targetCol.wipLimit !== null) {
+  const hasLaneWip = lane?.wipLimit !== null && lane?.wipLimit !== undefined;
+
+  // Check column WIP limit — skipped if lane WIP is set (lane WIP governs instead)
+  if (!hasLaneWip && targetCol.wipLimit !== null) {
     const inCol = state.items.filter(
       (it) => it.columnId === targetColumnId && it.swimlaneId === item.swimlaneId && it.id !== itemId,
     ).length;
@@ -152,16 +155,33 @@ export function canMoveItem(
     }
   }
 
-  // Check lane WIP limit
-  if (lane?.wipLimit !== null && lane?.wipLimit !== undefined) {
+  // Check lane WIP limit (overrides column WIP when set)
+  if (hasLaneWip) {
     const workflowColIds = new Set(
       laneCols.filter((c) => c.type !== "backlog" && c.type !== "done").map((c) => c.id),
     );
+    // When lane has expedite sub-lane, only count items of the same class for lane WIP
+    const isExpediteItem = item.classOfService === "expedite";
     const laneWip = state.items.filter(
-      (it) => it.swimlaneId === item.swimlaneId && workflowColIds.has(it.columnId) && it.id !== itemId,
+      (it) => it.swimlaneId === item.swimlaneId && workflowColIds.has(it.columnId) && it.id !== itemId
+        && (isExpediteItem ? it.classOfService === "expedite" : it.classOfService !== "expedite"),
     ).length;
-    if (laneWip >= lane.wipLimit) {
-      return { allowed: false, reason: `Lane WIP limit reached (${lane.wipLimit})` };
+    if (laneWip >= lane!.wipLimit!) {
+      return { allowed: false, reason: `Lane WIP limit reached (${lane!.wipLimit})` };
+    }
+  }
+
+  // Check expedite sub-lane WIP limit
+  if (item.classOfService === "expedite" && lane?.expediteEnabled && lane.expediteWipLimit !== null) {
+    const workflowColIds = new Set(
+      laneCols.filter((c) => c.type !== "backlog" && c.type !== "done").map((c) => c.id),
+    );
+    const expediteWip = state.items.filter(
+      (it) => it.swimlaneId === item.swimlaneId && it.classOfService === "expedite"
+        && workflowColIds.has(it.columnId) && it.id !== itemId,
+    ).length;
+    if (expediteWip >= lane.expediteWipLimit) {
+      return { allowed: false, reason: `Expedite WIP limit reached (${lane.expediteWipLimit})` };
     }
   }
 
@@ -221,7 +241,10 @@ export function moveItem(
   let workTotal = item.workTotal;
   if (state.runMode === "auto" && targetCol.type === "active") {
     const sim = state.definition.settings.autoSim;
-    workRemaining = normalRandom(sim.meanProcessingDays, sim.stdDevProcessingDays);
+    const baseWork = normalRandom(sim.meanProcessingDays, sim.stdDevProcessingDays);
+    // Expedite items take more effort (context switching, rushed work)
+    const mult = item.classOfService === "expedite" ? (sim.expediteWorkMultiplier ?? 1) : 1;
+    workRemaining = Math.max(1, Math.round(baseWork * mult));
     workTotal = workRemaining;
   } else if (targetCol.type === "queue" || targetCol.type === "done" || targetCol.type === "backlog") {
     workRemaining = 0;
@@ -263,16 +286,18 @@ function processItemsAuto(state: BoardState): BoardState {
   const sim = def.settings.autoSim;
   let s = state;
 
-  // Phase 1: Resolve blockers (decrement effort)
+  // Phase 1: Resolve blockers (decrement effort) and count blocked days
   s = {
     ...s,
     items: s.items.map((item) => {
-      if (!item.blocked || item.blockerEffort <= 0) return item;
+      if (!item.blocked) return item;
+      const days = (item.blockedDays ?? 0) + 1;
+      if (item.blockerEffort <= 0) return { ...item, blockedDays: days };
       const newEffort = item.blockerEffort - 1;
       if (newEffort <= 0) {
-        return { ...item, blocked: false, blockerDescription: "", blockerEffort: 0 };
+        return { ...item, blocked: false, blockerDescription: "", blockerEffort: 0, blockedDays: days };
       }
-      return { ...item, blockerEffort: newEffort };
+      return { ...item, blockerEffort: newEffort, blockedDays: days };
     }),
   };
 
@@ -375,17 +400,18 @@ function processItemsAuto(state: BoardState): BoardState {
     }
   }
 
-  // Phase 4: Apply new blockers
+  // Phase 4: Apply new blockers (expedite items have higher blocker chance — context switching cost)
   const activeItems = s.items.filter(
     (it) => !it.blocked && it.doneDay === null && it.commitDay !== null && it.workRemaining > 0,
   );
   for (const item of activeItems) {
-    if (seededRandom() < sim.blockChance) {
+    const blockMult = item.classOfService === "expedite" ? (sim.expediteBlockerMultiplier ?? 1) : 1;
+    if (seededRandom() < sim.blockChance * blockMult) {
       s = {
         ...s,
         items: s.items.map((it) =>
           it.id === item.id
-            ? { ...it, blocked: true, blockerDescription: "Dependency / impediment", blockerEffort: sim.blockerEffort }
+            ? { ...it, blocked: true, blockerDescription: item.classOfService === "expedite" ? "Expedite disruption / context switch" : "Dependency / impediment", blockerEffort: sim.blockerEffort }
             : it,
         ),
       };
@@ -482,20 +508,34 @@ export function generateArrivals(state: BoardState): BoardState {
   const { definition: def } = state;
   if (def.itemTypes.length === 0) return state;
 
+  const sim = def.settings.autoSim;
   const count = poisson(def.settings.arrivalRate);
   let s = state;
 
+  // Standard arrivals — distribute across all swimlanes
   for (let i = 0; i < count; i++) {
     const typeIdx = Math.floor(seededRandom() * def.itemTypes.length);
     const type = def.itemTypes[typeIdx];
 
     let swimlaneId = type.defaultSwimlane;
     if (!swimlaneId || !def.swimlanes.some((l) => l.id === swimlaneId)) {
-      const standardLane = def.swimlanes.find((l) => !l.name.toLowerCase().includes("expedite"));
-      swimlaneId = standardLane?.id ?? def.swimlanes[0]?.id ?? "default";
+      // Pick a random swimlane (weighted equally)
+      const laneIdx = Math.floor(seededRandom() * def.swimlanes.length);
+      swimlaneId = def.swimlanes[laneIdx]?.id ?? "default";
     }
 
     s = createWorkItem(s, type.id, swimlaneId);
+  }
+
+  // Expedite arrivals (for any swimlane with expedite enabled)
+  if ((sim.expediteChance ?? 0) > 0 && seededRandom() < sim.expediteChance) {
+    const expediteLanes = def.swimlanes.filter((l) => l.expediteEnabled);
+    if (expediteLanes.length > 0) {
+      const lane = expediteLanes[Math.floor(seededRandom() * expediteLanes.length)];
+      const typeIdx = Math.floor(seededRandom() * def.itemTypes.length);
+      const type = def.itemTypes[typeIdx];
+      s = createWorkItem(s, type.id, lane.id, undefined, "expedite");
+    }
   }
 
   return s;
@@ -599,8 +639,13 @@ export function validateBoard(def: BoardDefinition): ValidationResult[] {
       id: "wip", label: "WIP Control", icon: "\u{1F6A7}", color: "#f59e0b",
       ...(() => {
         const wl = cols.filter((c) => c.wipLimit !== null && c.type !== "backlog" && c.type !== "done");
-        return { pass: wl.length > 0, detail: wl.length > 0
-          ? `Limits on: ${wl.map((c) => `${c.name} (${c.wipLimit})`).join(", ")}`
+        const laneWl = def.swimlanes.filter((l) => l.wipLimit !== null);
+        const hasAnyWip = wl.length > 0 || laneWl.length > 0;
+        const details: string[] = [];
+        if (wl.length > 0) details.push(`Columns: ${wl.map((c) => `${c.name} (${c.wipLimit})`).join(", ")}`);
+        if (laneWl.length > 0) details.push(`Lanes: ${laneWl.map((l) => `${l.name} (${l.wipLimit})`).join(", ")}`);
+        return { pass: hasAnyWip, detail: hasAnyWip
+          ? details.join(". ")
           : "No WIP limits. No pull system." };
       })(),
     },

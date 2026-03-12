@@ -6,7 +6,7 @@ import type { ColumnDefinition, SubColumnDefinition, SwimlaneDefinition, ItemTyp
 import { BoardCanvas } from "./board-canvas";
 import { RoundControls } from "./round-controls";
 import { MetricsSummary } from "./metrics-summary";
-import { getWorkflowColumns } from "@/types/board";
+import { getWorkflowColumns, getSwimlaneCols } from "@/types/board";
 import { BoardCfdChart } from "@/components/charts/board/cfd-chart";
 import { BoardCtScatterChart } from "@/components/charts/board/ct-scatter-chart";
 import { BoardThroughputChart } from "@/components/charts/board/throughput-chart";
@@ -113,51 +113,149 @@ export function LiveBoardStep({ actions, onBack }: LiveBoardStepProps) {
 
       {/* Charts panel (collapsible) */}
       {chartsOpen && (
-        <div className="rounded-xl p-4" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-faint)" }}>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: "var(--text-muted)" }}>
-            Flow Metrics
-          </div>
-          <MetricsSummary boardState={boardState} />
+        <ChartsPanel boardState={boardState} definition={definition} items={items} snapshots={snapshots} currentDay={currentDay} />
+      )}
+    </div>
+  );
+}
 
-          {snapshots.length < 3 ? (
-            <div className="text-[10px] text-center mt-3" style={{ color: "var(--text-muted)" }}>
-              Advance a few more days to see charts with meaningful data.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-              {/* Cumulative Flow Diagram */}
-              <div className="rounded-lg p-3" style={{ background: "var(--bg-deeper)", border: "1px solid var(--border-faint)" }}>
-                <div className="text-[9px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
-                  Cumulative Flow Diagram
-                </div>
-                <BoardCfdChart snapshots={snapshots} definition={definition} />
-              </div>
+// ─── Charts Panel ────────────────────────────────────────────
 
-              {/* Cycle Time Scatter */}
-              <div className="rounded-lg p-3" style={{ background: "var(--bg-deeper)", border: "1px solid var(--border-faint)" }}>
-                <div className="text-[9px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
-                  Cycle Time Scatter
-                </div>
-                <BoardCtScatterChart items={items} sleDays={definition.settings.sleDays} />
-              </div>
+function ChartsPanel({
+  boardState, definition, items, snapshots, currentDay,
+}: {
+  boardState: NonNullable<BoardActions["boardState"]>;
+  definition: NonNullable<BoardActions["definition"]>;
+  items: BoardActions["items"];
+  snapshots: BoardActions["snapshots"];
+  currentDay: number;
+}) {
+  const [expandedChart, setExpandedChart] = React.useState<string | null>(null);
+  const hasMultipleLanes = definition.swimlanes.length > 1;
 
-              {/* Throughput */}
-              <div className="rounded-lg p-3" style={{ background: "var(--bg-deeper)", border: "1px solid var(--border-faint)" }}>
-                <div className="text-[9px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
-                  Throughput
-                </div>
-                <BoardThroughputChart items={items} currentDay={currentDay} />
-              </div>
+  // Build chart sections: one per swimlane (when multiple) + overall
+  const sections: { key: string; label: string; color: string; laneItems: typeof items; laneDef: typeof definition; swimlaneId?: string }[] = [];
 
-              {/* Aging WIP by State */}
-              <div className="rounded-lg p-3" style={{ background: "var(--bg-deeper)", border: "1px solid var(--border-faint)" }}>
-                <div className="text-[9px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
-                  Aging WIP by Workflow State
-                </div>
-                <AgingByStateChart items={items} definition={definition} currentDay={currentDay} />
+  if (hasMultipleLanes) {
+    for (const lane of definition.swimlanes) {
+      sections.push({
+        key: lane.id,
+        label: lane.name,
+        color: lane.color,
+        laneItems: items.filter((it) => it.swimlaneId === lane.id),
+        laneDef: { ...definition, columns: getSwimlaneCols(definition, lane.id) },
+        swimlaneId: lane.id,
+      });
+    }
+    // Overall section at the end
+    sections.push({
+      key: "all",
+      label: "Overall",
+      color: "#8b5cf6",
+      laneItems: items,
+      laneDef: definition,
+      swimlaneId: undefined,
+    });
+  } else {
+    sections.push({
+      key: "all",
+      label: "Flow Metrics",
+      color: "#8b5cf6",
+      laneItems: items,
+      laneDef: definition,
+      swimlaneId: undefined,
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {sections.map((section) => (
+        <LaneChartSection
+          key={section.key}
+          sectionKey={section.key}
+          label={section.label}
+          color={section.color}
+          laneItems={section.laneItems}
+          laneDef={section.laneDef}
+          swimlaneId={section.swimlaneId}
+          snapshots={snapshots}
+          boardState={boardState}
+          definition={definition}
+          currentDay={currentDay}
+          expandedChart={expandedChart}
+          setExpandedChart={setExpandedChart}
+        />
+      ))}
+    </div>
+  );
+}
+
+function LaneChartSection({
+  sectionKey, label, color, laneItems, laneDef, swimlaneId,
+  snapshots, boardState, definition, currentDay,
+  expandedChart, setExpandedChart,
+}: {
+  sectionKey: string;
+  label: string;
+  color: string;
+  laneItems: BoardActions["items"];
+  laneDef: NonNullable<BoardActions["definition"]>;
+  swimlaneId?: string;
+  snapshots: BoardActions["snapshots"];
+  boardState: NonNullable<BoardActions["boardState"]>;
+  definition: NonNullable<BoardActions["definition"]>;
+  currentDay: number;
+  expandedChart: string | null;
+  setExpandedChart: (id: string | null) => void;
+}) {
+  // Prefix chart IDs with section key so expand/collapse is per-section
+  const prefix = `${sectionKey}:`;
+  const sectionExpanded = expandedChart?.startsWith(prefix) ? expandedChart.slice(prefix.length) : null;
+
+  return (
+    <div className="rounded-xl p-4" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-faint)" }}>
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-2.5 h-2.5 rounded-sm" style={{ background: color }} />
+        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>
+          {label}
+        </div>
+      </div>
+
+      <MetricsSummary boardState={boardState} filteredItems={laneItems} filteredDefinition={laneDef} />
+
+      {snapshots.length < 3 ? (
+        <div className="text-[10px] text-center mt-3" style={{ color: "var(--text-muted)" }}>
+          Advance a few more days to see charts with meaningful data.
+        </div>
+      ) : (
+        <div className={sectionExpanded ? "" : "grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4"}>
+          {(() => {
+            const h = sectionExpanded ? 480 : 240;
+            return [
+              { id: "cfd", label: "Cumulative Flow Diagram", render: () => <BoardCfdChart snapshots={snapshots} definition={laneDef} swimlaneId={swimlaneId} height={h} /> },
+              { id: "scatter", label: "Cycle Time Scatter", render: () => <BoardCtScatterChart items={laneItems} sleDays={definition.settings.sleDays} height={h} /> },
+              { id: "throughput", label: "Throughput", render: () => <BoardThroughputChart items={laneItems} currentDay={currentDay} height={h} /> },
+              { id: "aging", label: "Aging WIP by Workflow State", render: () => <AgingByStateChart items={laneItems} definition={laneDef} currentDay={currentDay} height={h} /> },
+            ];
+          })()
+            .filter((chart) => !sectionExpanded || sectionExpanded === chart.id)
+            .map((chart) => (
+              <div key={chart.id} className={`rounded-lg p-3 ${sectionExpanded ? "mt-4" : ""}`}
+                style={{ background: "var(--bg-deeper)", border: "1px solid var(--border-faint)", minHeight: sectionExpanded ? 360 : undefined }}>
+                <button
+                  onClick={() => setExpandedChart(sectionExpanded === chart.id ? null : `${prefix}${chart.id}`)}
+                  className="flex items-center gap-1.5 mb-2 border-none bg-transparent cursor-pointer p-0 w-full text-left"
+                >
+                  <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                    {chart.label}
+                  </span>
+                  <span className="text-[8px] ml-auto" style={{ color: "var(--text-muted)" }}>
+                    {sectionExpanded === chart.id ? "\u25BC Collapse" : "\u25B6 Expand"}
+                  </span>
+                </button>
+                {chart.render()}
               </div>
-            </div>
-          )}
+            ))}
         </div>
       )}
     </div>
@@ -256,15 +354,17 @@ function WorkflowTab({ actions }: { actions: BoardActions }) {
 
   if (!definition) return null;
 
-  const handleAddSwimlane = (preset?: "expedite") => {
+  const handleAddSwimlane = () => {
     const id = makeId("lane");
     const order = definition.swimlanes.length;
     const baseCols: ColumnDefinition[] = JSON.parse(
       JSON.stringify(definition.swimlanes[0]?.columns ?? definition.columns),
     );
-    const lane: SwimlaneDefinition = preset === "expedite"
-      ? { id, name: "Expedite", color: "#ef4444", wipLimit: 1, order, policy: "Critical items only. Must be pulled immediately.", columns: baseCols }
-      : { id, name: `Lane ${order + 1}`, color: LANE_COLORS[order % LANE_COLORS.length], wipLimit: null, order, policy: "", columns: baseCols };
+    const lane: SwimlaneDefinition = {
+      id, name: `Lane ${order + 1}`, color: LANE_COLORS[order % LANE_COLORS.length],
+      wipLimit: null, order, policy: "", columns: baseCols,
+      expediteEnabled: false, expediteWipLimit: null, expeditePolicy: "",
+    };
     addSwimlane(lane);
     setExpandedLane(id);
   };
@@ -285,24 +385,15 @@ function WorkflowTab({ actions }: { actions: BoardActions }) {
         <div className="text-[8px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
           Swimlanes ({definition.swimlanes.length})
         </div>
-        <div className="flex gap-1">
-          {!definition.swimlanes.some((l) => l.name === "Expedite") && (
-            <button onClick={() => handleAddSwimlane("expedite")}
-              className="text-[8px] font-bold px-1.5 py-0.5 rounded border-none cursor-pointer"
-              style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444" }}>
-              + Expedite
-            </button>
-          )}
-          <button onClick={() => handleAddSwimlane()}
-            className="text-[8px] font-bold px-1.5 py-0.5 rounded border-none cursor-pointer"
-            style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6" }}>
-            + Lane
-          </button>
-        </div>
+        <button onClick={() => handleAddSwimlane()}
+          className="text-[8px] font-bold px-1.5 py-0.5 rounded border-none cursor-pointer"
+          style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6" }}>
+          + Lane
+        </button>
       </div>
 
       {/* Expedite warning */}
-      {definition.swimlanes.some((l) => l.name.toLowerCase().includes("expedite")) && (
+      {definition.swimlanes.some((l) => l.expediteEnabled) && (
         <div className="rounded-lg px-2 py-1.5 mb-2 text-[9px] leading-relaxed"
           style={{ background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.15)", color: "var(--text-secondary)" }}>
           <strong style={{ color: "#ef4444" }}>Use expedite sparingly.</strong>{" "}
@@ -380,6 +471,42 @@ function WorkflowTab({ actions }: { actions: BoardActions }) {
                       onChange={(e) => updateSwimlane(lane.id, { policy: e.target.value })}
                       className="w-full rounded-md px-2 py-1 text-[11px] border-none"
                       style={inputStyle} />
+                  </div>
+
+                  {/* Expedite sub-lane toggle */}
+                  <div className="rounded-lg px-2 py-2" style={{ background: "rgba(239,68,68,0.03)", border: "1px solid rgba(239,68,68,0.1)" }}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-bold" style={{ color: "#ef4444" }}>Expedite Sub-Lane</span>
+                      <button onClick={() => updateSwimlane(lane.id, { expediteEnabled: !lane.expediteEnabled })}
+                        className="px-2 py-0.5 rounded text-[9px] font-bold border-none cursor-pointer"
+                        style={{
+                          background: lane.expediteEnabled ? "rgba(239,68,68,0.12)" : "var(--bg-deeper)",
+                          color: lane.expediteEnabled ? "#ef4444" : "var(--text-muted)",
+                        }}>
+                        {lane.expediteEnabled ? "\u2713 On" : "Off"}
+                      </button>
+                    </div>
+                    {lane.expediteEnabled && (
+                      <div className="flex flex-col gap-1.5 mt-1.5">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[7px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Expedite WIP</label>
+                            <input type="number" min={1} max={20} value={lane.expediteWipLimit ?? ""} placeholder="None"
+                              onChange={(e) => updateSwimlane(lane.id, { expediteWipLimit: e.target.value ? parseInt(e.target.value) : null })}
+                              className="w-full rounded-md px-2 py-1 text-[10px] border-none" style={inputStyle} />
+                          </div>
+                          <div>
+                            <label className="text-[7px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Policy</label>
+                            <input type="text" value={lane.expeditePolicy ?? ""} placeholder="Expedite criteria"
+                              onChange={(e) => updateSwimlane(lane.id, { expeditePolicy: e.target.value })}
+                              className="w-full rounded-md px-2 py-1 text-[10px] border-none" style={inputStyle} />
+                          </div>
+                        </div>
+                        <div className="text-[8px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                          Expedite items share this lane&apos;s workflow but have higher blocker risk and longer processing times.
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Column editor for this lane */}
@@ -838,6 +965,39 @@ function SettingsTab({ actions }: { actions: BoardActions }) {
                 className="w-full rounded-md px-2 py-1 text-[10px] border-none" style={inputStyle} />
             </div>
           </div>
+          {/* Expedite settings (only when expedite lane exists) */}
+          {definition.swimlanes.some((l) => l.expediteEnabled) && (
+            <>
+              <hr className="border-none h-px" style={{ background: "var(--border-faint)" }} />
+              <div className="text-[8px] font-bold uppercase tracking-wider" style={{ color: "#ef4444" }}>
+                Expedite Dynamics
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-[7px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Arrival (%)</label>
+                  <input type="number" min={0} max={30} step={1} value={Math.round((sim.expediteChance ?? 0.05) * 100)}
+                    onChange={(e) => updateAutoSim({ expediteChance: (parseInt(e.target.value) || 0) / 100 })}
+                    className="w-full rounded-md px-2 py-1 text-[10px] border-none" style={inputStyle} />
+                </div>
+                <div>
+                  <label className="text-[7px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Work &times;</label>
+                  <input type="number" min={1} max={5} step={0.1} value={sim.expediteWorkMultiplier ?? 1.5}
+                    onChange={(e) => updateAutoSim({ expediteWorkMultiplier: parseFloat(e.target.value) || 1.5 })}
+                    className="w-full rounded-md px-2 py-1 text-[10px] border-none" style={inputStyle} />
+                </div>
+                <div>
+                  <label className="text-[7px] font-bold uppercase tracking-wider block mb-0.5" style={{ color: "var(--text-muted)" }}>Block &times;</label>
+                  <input type="number" min={1} max={5} step={0.5} value={sim.expediteBlockerMultiplier ?? 2.0}
+                    onChange={(e) => updateAutoSim({ expediteBlockerMultiplier: parseFloat(e.target.value) || 2.0 })}
+                    className="w-full rounded-md px-2 py-1 text-[10px] border-none" style={inputStyle} />
+                </div>
+              </div>
+              <div className="rounded-lg px-2 py-1.5 text-[8px] leading-relaxed" style={{ background: "rgba(239,68,68,0.04)", color: "var(--text-secondary)" }}>
+                Expedite items arrive ~{Math.round((sim.expediteChance ?? 0.05) * 100)}% of days, take {sim.expediteWorkMultiplier ?? 1.5}&times; longer to process,
+                and have {sim.expediteBlockerMultiplier ?? 2.0}&times; blocker risk. They consume lane WIP and cause standard items to age.
+              </div>
+            </>
+          )}
           <div className="rounded-lg px-2 py-1.5 text-[8px] leading-relaxed" style={{ background: "rgba(139,92,246,0.04)", color: "var(--text-secondary)" }}>
             Items take ~{sim.meanProcessingDays}&plusmn;{sim.stdDevProcessingDays} days per active column.
             {sim.blockChance > 0 && ` ${Math.round(sim.blockChance * 100)}% blocker chance (${sim.blockerEffort}d to clear).`}
