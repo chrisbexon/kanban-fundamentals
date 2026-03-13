@@ -18,7 +18,9 @@ export function LessonNav({ step, labels, onNav, canAdv }: LessonNavProps) {
           <div key={i} className="flex items-center min-w-fit" style={{ flex: i < labels.length - 1 ? 1 : "none" }}>
             <button
               onClick={() => ok && onNav(i)}
-              className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border-none whitespace-nowrap transition-all duration-250"
+              disabled={!ok}
+              aria-current={act ? "step" : undefined}
+              className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border-none whitespace-nowrap transition-all duration-250 disabled:cursor-not-allowed"
               style={{
                 background: act ? "rgba(59,130,246,0.12)" : "transparent",
                 cursor: ok ? "pointer" : "default",

@@ -11,22 +11,21 @@ interface BoardColumnProps {
   workers: Worker[];
   day: number;
   sleDays: number;
-  wipCount?: number;
-  wipLimit?: number;
-  enforceWip?: boolean;
   onClickItem?: (id: string) => void;
   assignableItemIds: Set<string>;
   pullableItemIds: Set<string>;
   onPullItem: (id: string) => void;
   onReorder?: (itemId: string, dir: "up" | "down") => void;
+  onAssignWorkerToItem?: (workerId: string, itemId: string) => void;
+  /** When true, this column is inside a group wrapper — no outer border/rounding */
+  grouped?: boolean;
 }
 
 export function BoardColumn({
-  def, items, workers, day, sleDays, wipCount, wipLimit, enforceWip,
-  onClickItem, assignableItemIds, pullableItemIds, onPullItem, onReorder,
+  def, items, workers, day, sleDays,
+  onClickItem, assignableItemIds, pullableItemIds, onPullItem, onReorder, onAssignWorkerToItem,
+  grouped,
 }: BoardColumnProps) {
-  const isOverWip = wipCount !== undefined && wipLimit !== undefined && enforceWip && wipCount > wipLimit;
-  const isAtWip = wipCount !== undefined && wipLimit !== undefined && enforceWip && wipCount === wipLimit;
   const isBacklog = def.location === "backlog";
   const isDone = def.location === "done";
   const isFinished = def.location === "red-finished" || def.location === "blue-finished";
@@ -42,43 +41,26 @@ export function BoardColumn({
 
   return (
     <div
-      className="flex flex-col rounded-xl min-w-[140px] flex-1"
-      style={{
+      className={`flex flex-col flex-1 ${grouped ? "min-w-0" : "rounded-xl min-w-[120px]"}`}
+      style={grouped ? {} : {
         background: "var(--bg-surface)",
-        border: isOverWip
-          ? "1px solid rgba(239,68,68,0.25)"
-          : "1px solid var(--border-hairline)",
+        border: "1px solid var(--border-hairline)",
       }}
     >
-      {/* Column header */}
+      {/* Column sub-header */}
       <div
-        className="px-3 py-2 rounded-t-xl flex items-center justify-between"
+        className={`px-2.5 py-1.5 flex items-center justify-between ${grouped ? "" : "rounded-t-xl"}`}
         style={{
-          background: `${def.color}08`,
-          borderBottom: `2px solid ${def.color}30`,
+          background: grouped ? `${def.color}06` : `${def.color}08`,
+          borderBottom: `1px solid ${def.color}20`,
         }}
       >
         <div>
-          <div className="text-[10px] font-bold" style={{ color: def.color }}>
-            {def.label}
+          <div className="text-[9px] font-bold" style={{ color: def.color }}>
+            {grouped ? def.label.replace(/^(Red|Blue|Green)\s*/, "") || def.label : def.label}
           </div>
           <div className="text-[8px]" style={{ color: "var(--text-muted)" }}>{items.length} items</div>
         </div>
-        {def.wipColor && wipLimit !== undefined && (
-          <div
-            className="text-[10px] font-bold font-mono px-2 py-0.5 rounded"
-            style={{
-              background: isOverWip
-                ? "rgba(239,68,68,0.15)"
-                : isAtWip
-                ? "rgba(245,158,11,0.15)"
-                : "var(--bg-interactive)",
-              color: isOverWip ? "#ef4444" : isAtWip ? "#fbbf24" : "var(--text-tertiary)",
-            }}
-          >
-            {wipCount}/{wipLimit}
-          </div>
-        )}
       </div>
 
       {/* Items */}
@@ -118,6 +100,7 @@ export function BoardColumn({
                     onClick={canClick ? () => onClickItem?.(item.id) : undefined}
                     isAssignable={canClick}
                     compact={isDone}
+                    onDropWorker={onAssignWorkerToItem ? (workerId) => onAssignWorkerToItem(workerId, item.id) : undefined}
                   />
                 </div>
                 {isPullableColumn && pullableItemIds.has(item.id) && (

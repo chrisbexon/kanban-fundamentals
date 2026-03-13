@@ -49,11 +49,11 @@ export const LITTLES_LAW_QUIZ: LittlesLawQuizQuestion[] = [
     q: "In the drive-through, adding a second order window helped most when:",
     opts: [
       "The kitchen was the bottleneck",
-      "The order queue was building up and cars were leaving",
+      "The order queue was building up faster than cars could be served",
       "Payment was slow",
       "There were very few cars arriving",
     ],
     ans: 1,
-    exp: "A second order window only helps if ordering is the bottleneck \u2014 when cars are queuing up and leaving (balking). If the kitchen is the constraint, adding order windows just pushes cars faster into a queue at the kitchen, increasing WIP without improving throughput.",
+    exp: "A second order window only helps if ordering is the bottleneck \u2014 when the queue is growing because cars can't order fast enough. If the kitchen is the constraint, adding order windows just pushes cars faster into a queue at the kitchen, increasing WIP without improving throughput.",
   },
 ];

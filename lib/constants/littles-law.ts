@@ -5,10 +5,9 @@ export const TICKS_PER_SECOND = 10;
 
 /** Default simulation settings */
 export const DEFAULT_SIM_SETTINGS: SimSettings = {
-  arrivalInterval: 30,   // 1 car every 30 seconds on average
+  arrivalInterval: 10,   // 1 car every 10 seconds on average — deliberately high to challenge students
   orderServers: 1,
   kitchenWorkers: 2,
-  balkThreshold: 6,      // cars leave if 6+ already in order queue
 };
 
 /** Order size probabilities */

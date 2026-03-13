@@ -118,8 +118,8 @@ const sections: Section[] = [
         num: "3.2",
         title: "Pull vs Push Systems",
         description: "Compare push and pull systems side by side and see how pull creates natural self-regulation.",
-        status: "coming-soon",
-        href: "#",
+        status: "available",
+        href: "/lessons/pull-vs-push",
         icon: "\u{1F504}",
       },
       {
@@ -190,19 +190,11 @@ const sections: Section[] = [
 function SectionProgress({ lessons }: { lessons: Lesson[] }) {
   const total = lessons.length;
   const available = lessons.filter((l) => l.status === "available").length;
-  // For now, "available" = built. Later this will track actual completion.
-  const pct = total > 0 ? Math.round((available / total) * 100) : 0;
 
   return (
     <div className="flex items-center gap-2 mt-1">
-      <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: "var(--border-faint)" }}>
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, background: "rgba(34,197,94,0.6)" }}
-        />
-      </div>
       <span className="text-[9px] font-mono" style={{ color: "var(--text-muted)" }}>
-        {available}/{total}
+        {available} of {total} lessons available
       </span>
     </div>
   );

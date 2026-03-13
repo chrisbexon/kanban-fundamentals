@@ -60,6 +60,7 @@ interface WipGameStepProps {
   onSelectWorker: (id: string) => void;
   onClickItem: (id: string) => void;
   onUnassignWorker: (id: string) => void;
+  onAssignWorkerToItem: (workerId: string, itemId: string) => void;
   onResolve: () => void;
   onAcknowledge: () => void;
   onPullItem: (id: string) => void;
@@ -75,7 +76,7 @@ export function WipGameStep({
   items, workers, day, phase, settings, snapshots, roundNumber, wipCounts, doneCount,
   selectedWorkerId, assignedWorkerCount, lastResult, events, gameOver,
   gameRound, totalAge,
-  onSelectWorker, onClickItem, onUnassignWorker, onResolve, onAcknowledge,
+  onSelectWorker, onClickItem, onUnassignWorker, onAssignWorkerToItem, onResolve, onAcknowledge,
   onPullItem, onReorderBacklog, onUpdateSettings, onRestart, onAcknowledgeEvent, onFinish, onBack,
 }: WipGameStepProps) {
   const unacknowledgedEvents = events.filter((e) => !e.acknowledged);
@@ -127,6 +128,21 @@ export function WipGameStep({
         <div className="pop-in rounded-[10px] py-2 px-3 text-center min-w-[70px]" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.12)" }}>
           <div className="text-lg font-extrabold font-mono text-emerald-400">{doneCount}</div>
           <div className="text-[8px] uppercase tracking-wider font-bold" style={{ color: "var(--text-muted)" }}>Done</div>
+        </div>
+        <div
+          className="pop-in rounded-[10px] py-2 px-3 text-center min-w-[70px]"
+          style={{
+            background: totalAge > 60 ? "rgba(239,68,68,0.06)" : totalAge > 40 ? "rgba(245,158,11,0.06)" : "rgba(59,130,246,0.06)",
+            border: totalAge > 60 ? "1px solid rgba(239,68,68,0.12)" : totalAge > 40 ? "1px solid rgba(245,158,11,0.12)" : "1px solid rgba(59,130,246,0.12)",
+          }}
+        >
+          <div
+            className="text-lg font-extrabold font-mono"
+            style={{ color: totalAge > 60 ? "#ef4444" : totalAge > 40 ? "#fbbf24" : "#60a5fa" }}
+          >
+            {totalAge}
+          </div>
+          <div className="text-[8px] uppercase tracking-wider font-bold" style={{ color: "var(--text-muted)" }}>Total Age</div>
         </div>
       </div>
 
@@ -202,6 +218,7 @@ export function WipGameStep({
             onClickItem={onClickItem}
             onPullItem={onPullItem}
             onReorderBacklog={onReorderBacklog}
+            onAssignWorkerToItem={onAssignWorkerToItem}
             disabled={phase !== "assign" || gameOver}
           />
         </>

@@ -87,9 +87,9 @@ export function LittlesLawIntro({ onNext }: IntroProps) {
         </ul>
         <div className="text-[13px] leading-[1.8] mt-3" style={{ color: "var(--text-secondary)" }}>
           Watch the <strong style={{ color: "var(--text-primary)" }}>cumulative flow chart</strong> update
-          in real time. When arrivals outpace departures, you&apos;ll see WIP build up, cycle times
-          balloon, and frustrated drivers leaving the queue. Little&apos;s Law will be staring you
-          right in the face.
+          in real time. When arrivals outpace departures, you&apos;ll see WIP build up and cycle times
+          balloon. The queue will grow without limit until you act. Little&apos;s Law will be staring
+          you right in the face.
         </div>
       </Card>
 

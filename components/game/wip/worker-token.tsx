@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useCallback } from "react";
 import type { Worker } from "@/types/wip-game";
 import { STAGE_COLORS } from "@/lib/constants/wip-game";
 
@@ -14,10 +15,19 @@ export function WorkerToken({ worker, selected, onClick, onUnassign }: WorkerTok
   const color = STAGE_COLORS[worker.color];
   const assigned = worker.assignedItemId !== null;
 
+  const handleDragStart = useCallback((e: React.DragEvent) => {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("application/worker-id", worker.id);
+  }, [worker.id]);
+
   return (
     <button
       onClick={assigned && onUnassign ? onUnassign : onClick}
-      className={`relative flex items-center gap-2 py-2 px-3 rounded-xl transition-all duration-200 cursor-pointer ${
+      draggable={!assigned}
+      onDragStart={handleDragStart}
+      className={`relative flex items-center gap-2 py-2 px-3 rounded-xl transition-all duration-200 ${
+        assigned ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
+      } ${
         selected ? "ring-2 ring-white/40 scale-105" : ""
       }`}
       style={{
@@ -40,7 +50,7 @@ export function WorkerToken({ worker, selected, onClick, onUnassign }: WorkerTok
       <div className="text-left">
         <div className="text-[10px] font-bold" style={{ color }}>{worker.name}</div>
         <div className="text-[8px]" style={{ color: "var(--text-tertiary)" }}>
-          {assigned ? `→ ${worker.assignedItemId}` : selected ? "Click item" : "Available"}
+          {assigned ? `→ ${worker.assignedItemId}` : selected ? "Click item" : "Drag to item"}
         </div>
       </div>
       {assigned && onUnassign && (

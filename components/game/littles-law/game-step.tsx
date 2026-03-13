@@ -59,7 +59,6 @@ export function LittlesLawGameStep({
           littlesLaw={snapshot.littlesLaw}
           totalArrivals={snapshot.totalArrivals}
           totalDepartures={snapshot.totalDepartures}
-          totalBalked={snapshot.totalBalked}
           simTimeMinutes={snapshot.simTimeMinutes}
         />
       </div>
@@ -79,13 +78,13 @@ export function LittlesLawGameStep({
       </div>
 
       {/* Tips */}
-      {snapshot.simTimeMinutes > 1 && snapshot.totalBalked > 0 && (
+      {snapshot.simTimeMinutes > 1 && snapshot.carsInSystem > 10 && (
         <div
           className="rounded-xl px-4 py-3 mb-3 text-xs"
-          style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", color: "var(--text-secondary)" }}
+          style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)", color: "var(--text-secondary)" }}
         >
-          <strong className="text-red-400">{snapshot.totalBalked} cars drove away</strong> because the queue was too long.
-          Try adding a second order window or reducing arrival rate.
+          <strong className="text-amber-400">{snapshot.carsInSystem} cars in the system</strong> &mdash; the queue is growing!
+          Try adding kitchen staff or a second order window to increase throughput.
         </div>
       )}
 

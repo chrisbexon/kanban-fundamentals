@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useCallback } from "react";
 import type { WipWorkItem, Worker, WorkColor } from "@/types/wip-game";
 import { STAGE_COLORS } from "@/lib/constants/wip-game";
 
@@ -36,6 +37,7 @@ interface WorkItemCardProps {
   onClick?: () => void;
   isAssignable?: boolean;
   compact?: boolean;
+  onDropWorker?: (workerId: string) => void;
 }
 
 function WorkBarDisplay({ color, required, done }: { color: WorkColor; required: number; done: number }) {
@@ -68,35 +70,66 @@ function WorkBarDisplay({ color, required, done }: { color: WorkColor; required:
   );
 }
 
-export function WorkItemCard({ item, day, sleDays, assignedWorkers, onClick, isAssignable, compact }: WorkItemCardProps) {
+export function WorkItemCard({ item, day, sleDays, assignedWorkers, onClick, isAssignable, compact, onDropWorker }: WorkItemCardProps) {
   const age = item.dayStarted ? day - item.dayStarted : 0;
   const isExpedite = item.class !== "standard";
   const overdue = item.dueDay !== null && day > item.dueDay && item.location !== "done";
   const isInProgress = item.dayStarted !== null && item.location !== "backlog" && item.location !== "done";
   const level = ageLevel(age, sleDays);
+  const [dragOver, setDragOver] = useState(false);
+
+  const baseBorder = dragOver
+    ? "1px solid rgba(59,130,246,0.4)"
+    : item.blocked
+    ? "1px solid rgba(245,158,11,0.2)"
+    : overdue
+    ? "1px solid rgba(239,68,68,0.3)"
+    : isExpedite
+    ? "1px solid rgba(168,85,247,0.2)"
+    : "1px solid var(--border-subtle)";
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (!onDropWorker) return;
+    if (e.dataTransfer.types.includes("application/worker-id")) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      setDragOver(true);
+    }
+  }, [onDropWorker]);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (!onDropWorker) return;
+    const workerId = e.dataTransfer.getData("application/worker-id");
+    if (workerId) onDropWorker(workerId);
+  }, [onDropWorker]);
 
   return (
     <button
       onClick={onClick}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       className={`w-full text-left rounded-xl p-2.5 transition-all duration-200 ${
         isAssignable ? "cursor-pointer ring-1 ring-blue-500/30 hover:ring-blue-500/60" : "cursor-default"
-      } ${item.blocked ? "anim-pulse" : ""}`}
+      } ${dragOver ? "ring-2 ring-blue-400/60 scale-[1.02]" : ""} ${item.blocked ? "anim-pulse" : ""}`}
       style={{
-        background: item.blocked
+        background: dragOver
+          ? "rgba(59,130,246,0.08)"
+          : item.blocked
           ? "rgba(245,158,11,0.06)"
           : isExpedite
           ? "rgba(168,85,247,0.06)"
           : "var(--bg-surface)",
-        border: item.blocked
-          ? "1px solid rgba(245,158,11,0.2)"
-          : overdue
-          ? "1px solid rgba(239,68,68,0.3)"
-          : isExpedite
-          ? "1px solid rgba(168,85,247,0.2)"
-          : "1px solid var(--border-subtle)",
-        borderLeft: isInProgress
-          ? `3px solid ${AGE_BORDER[level]}`
-          : undefined,
+        borderTop: baseBorder,
+        borderRight: baseBorder,
+        borderBottom: baseBorder,
+        borderLeft: isInProgress ? `3px solid ${AGE_BORDER[level]}` : baseBorder,
       }}
     >
       {/* Header row */}

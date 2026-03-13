@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { QUIZ } from "@/content/lesson-1-penny-game/config";
 import { StepHeader } from "@/components/lesson/step-header";
 import { Btn } from "@/components/ui/button";
@@ -139,7 +140,11 @@ export function QuizStep({ onBack }: QuizStepProps) {
           </div>
           <div className="flex justify-between mt-[18px] flex-wrap gap-2.5">
             <Btn onClick={onBack}>&larr; Debrief</Btn>
-            {pass && <Btn primary disabled>Next Lesson: WIP Limits &amp; Work Item Age &rarr;</Btn>}
+            {pass && (
+              <Link href="/dashboard" className="no-underline">
+                <Btn primary>Back to Dashboard &rarr;</Btn>
+              </Link>
+            )}
           </div>
         </div>
       )}

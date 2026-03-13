@@ -41,7 +41,6 @@ export function createSimState(settings: SimSettings): SimState {
     nextCarId: 1,
     totalArrivals: 0,
     totalDepartures: 0,
-    totalBalked: 0,
     totalCycleTime: 0,
     flowData: [{ tick: 0, arrivals: 0, departures: 0, wip: 0 }],
     arrivalAccum: 0,
@@ -82,21 +81,27 @@ export function advanceTick(state: SimState): SimState {
 
 // ─── Car Spawning ───────────────────────────────────────────
 
+/** Box-Muller normal distribution: mean ± stddev */
+function normalRandom(mean: number, stddev: number): number {
+  const u1 = Math.random();
+  const u2 = Math.random();
+  const z = Math.sqrt(-2 * Math.log(u1 || 0.001)) * Math.cos(2 * Math.PI * u2);
+  return mean + z * stddev;
+}
+
 function maybeSpawnCar(state: SimState): SimState {
   const s = { ...state };
-  const intervalTicks = toTicks(s.settings.arrivalInterval);
-  s.arrivalAccum += 1 + (Math.random() - 0.5) * 0.5;
+  s.arrivalAccum += 1;
 
-  if (s.arrivalAccum >= intervalTicks) {
-    s.arrivalAccum -= intervalTicks;
+  // On first tick or when counter not yet set, pick the first target
+  if (s.arrivalAccum === 1 && s.tick === 0) {
+    const meanTicks = toTicks(s.settings.arrivalInterval);
+    const gap = Math.max(toTicks(2), Math.round(normalRandom(meanTicks, meanTicks * 0.3)));
+    s.arrivalAccum = -gap + 1; // will reach 0 after `gap` ticks
+  }
 
-    // Check balking
-    const orderQueueLen = s.cars.filter((c) => c.station === "order-queue").length;
-    if (orderQueueLen >= s.settings.balkThreshold) {
-      s.totalBalked += 1;
-      return s;
-    }
-
+  if (s.arrivalAccum >= 0) {
+    // Spawn car
     const car: Car = {
       id: s.nextCarId,
       arrivalTick: s.tick,
@@ -114,6 +119,11 @@ function maybeSpawnCar(state: SimState): SimState {
     s.cars = [...s.cars, car];
     s.nextCarId += 1;
     s.totalArrivals += 1;
+
+    // Pick next arrival gap from normal distribution (stddev = 30% of mean)
+    const meanTicks = toTicks(s.settings.arrivalInterval);
+    const nextGap = Math.max(toTicks(2), Math.round(normalRandom(meanTicks, meanTicks * 0.3)));
+    s.arrivalAccum = -nextGap;
   }
 
   return s;
@@ -332,7 +342,7 @@ function pullCarsForward(state: SimState): SimState {
 function recordFlow(state: SimState): SimState {
   if (state.tick % FLOW_SAMPLE_INTERVAL !== 0) return state;
 
-  const wip = state.cars.filter((c) => c.station !== "departed" && c.station !== "balked").length;
+  const wip = state.cars.filter((c) => c.station !== "departed").length;
 
   const point: FlowPoint = {
     tick: state.tick,
@@ -355,10 +365,9 @@ export function getSnapshot(state: SimState): {
   queueLengths: { order: number; waitPay: number; waitCollect: number; kitchen: number };
   totalArrivals: number;
   totalDepartures: number;
-  totalBalked: number;
   simTimeMinutes: number;
 } {
-  const activeCars = state.cars.filter((c) => c.station !== "departed" && c.station !== "balked");
+  const activeCars = state.cars.filter((c) => c.station !== "departed");
   const carsInSystem = activeCars.length;
 
   const simSeconds = state.tick / TICKS_PER_SECOND;
@@ -392,7 +401,6 @@ export function getSnapshot(state: SimState): {
     },
     totalArrivals: state.totalArrivals,
     totalDepartures: state.totalDepartures,
-    totalBalked: state.totalBalked,
     simTimeMinutes: Math.round(simMinutes * 10) / 10,
   };
 }

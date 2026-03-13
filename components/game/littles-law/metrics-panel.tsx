@@ -7,7 +7,6 @@ interface MetricsPanelProps {
   littlesLaw: { wip: number; throughput: number; cycleTime: number };
   totalArrivals: number;
   totalDepartures: number;
-  totalBalked: number;
   simTimeMinutes: number;
 }
 
@@ -28,21 +27,20 @@ function Metric({ label, value, unit, color }: { label: string; value: string | 
 
 export function MetricsPanel({
   carsInSystem, avgCycleTime, throughputPerMin, littlesLaw,
-  totalArrivals, totalDepartures, totalBalked, simTimeMinutes,
+  totalArrivals, totalDepartures, simTimeMinutes,
 }: MetricsPanelProps) {
   // Little's Law check: WIP ≈ Throughput × Cycle Time
   const computed = littlesLaw.throughput * littlesLaw.cycleTime;
   const computedRounded = Math.round(computed * 10) / 10;
 
   return (
-    <div>
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-3">
+    <div aria-live="polite" aria-atomic="true">
+      <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-3">
         <Metric label="Cars in System" value={carsInSystem} color="#8b5cf6" />
         <Metric label="Avg Cycle Time" value={avgCycleTime} unit="s" color="#f59e0b" />
         <Metric label="Throughput" value={throughputPerMin} unit="/min" color="#22c55e" />
         <Metric label="Arrivals" value={totalArrivals} color="#3b82f6" />
         <Metric label="Departed" value={totalDepartures} color="#22c55e" />
-        <Metric label="Drove Away" value={totalBalked} color="#ef4444" />
       </div>
 
       {/* Little's Law formula */}

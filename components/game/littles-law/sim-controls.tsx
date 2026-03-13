@@ -55,11 +55,12 @@ export function SimControls({
       <div className="flex flex-wrap gap-4">
         {/* Arrival rate */}
         <div>
-          <div className="text-[9px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--text-tertiary)" }}>
-            Car arrival (every)
-          </div>
+          <label htmlFor="arrival-interval" className="text-[9px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: "var(--text-tertiary)" }}>
+            Car arrival (around)
+          </label>
           <div className="flex items-center gap-1.5">
             <input
+              id="arrival-interval"
               type="range"
               min={10}
               max={60}
@@ -67,21 +68,24 @@ export function SimControls({
               value={settings.arrivalInterval}
               onChange={(e) => onUpdateSettings({ arrivalInterval: Number(e.target.value) })}
               className="w-24 accent-blue-500"
+              aria-valuetext={`${settings.arrivalInterval} seconds`}
             />
             <span className="text-xs font-mono w-8 text-right" style={{ color: "var(--text-secondary)" }}>{settings.arrivalInterval}s</span>
           </div>
         </div>
 
         {/* Order terminals */}
-        <div>
-          <div className="text-[9px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--text-tertiary)" }}>
+        <fieldset className="m-0 p-0 border-none">
+          <legend className="text-[9px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--text-tertiary)" }}>
             Order windows
-          </div>
-          <div className="flex gap-1">
+          </legend>
+          <div className="flex gap-1" role="radiogroup" aria-label="Number of order windows">
             {[1, 2].map((n) => (
               <button
                 key={n}
                 onClick={() => onUpdateSettings({ orderServers: n })}
+                role="radio"
+                aria-checked={settings.orderServers === n}
                 className="px-3 py-1 rounded text-xs font-bold transition-all"
                 style={{
                   background: settings.orderServers === n ? "rgba(139,92,246,0.15)" : "transparent",
@@ -93,18 +97,20 @@ export function SimControls({
               </button>
             ))}
           </div>
-        </div>
+        </fieldset>
 
         {/* Kitchen workers */}
-        <div>
-          <div className="text-[9px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--text-tertiary)" }}>
+        <fieldset className="m-0 p-0 border-none">
+          <legend className="text-[9px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--text-tertiary)" }}>
             Kitchen staff
-          </div>
-          <div className="flex gap-1">
+          </legend>
+          <div className="flex gap-1" role="radiogroup" aria-label="Number of kitchen staff">
             {[1, 2, 3, 4].map((n) => (
               <button
                 key={n}
                 onClick={() => onUpdateSettings({ kitchenWorkers: n })}
+                role="radio"
+                aria-checked={settings.kitchenWorkers === n}
                 className="px-2.5 py-1 rounded text-xs font-bold transition-all"
                 style={{
                   background: settings.kitchenWorkers === n ? "rgba(245,158,11,0.15)" : "transparent",
@@ -116,26 +122,8 @@ export function SimControls({
               </button>
             ))}
           </div>
-        </div>
+        </fieldset>
 
-        {/* Balk threshold */}
-        <div>
-          <div className="text-[9px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--text-tertiary)" }}>
-            Max queue before leave
-          </div>
-          <div className="flex items-center gap-1.5">
-            <input
-              type="range"
-              min={3}
-              max={15}
-              step={1}
-              value={settings.balkThreshold}
-              onChange={(e) => onUpdateSettings({ balkThreshold: Number(e.target.value) })}
-              className="w-20 accent-red-500"
-            />
-            <span className="text-xs font-mono w-6 text-right" style={{ color: "var(--text-secondary)" }}>{settings.balkThreshold}</span>
-          </div>
-        </div>
       </div>
     </div>
   );

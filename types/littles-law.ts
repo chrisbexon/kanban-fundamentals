@@ -9,8 +9,7 @@ export type CarStation =
   | "paying"
   | "wait-collect"
   | "collecting"
-  | "departed"
-  | "balked";
+  | "departed";
 
 export interface Car {
   id: number;
@@ -43,8 +42,6 @@ export interface SimSettings {
   orderServers: number;
   /** Number of kitchen workers (1-4) */
   kitchenWorkers: number;
-  /** Queue length at which cars balk (leave) */
-  balkThreshold: number;
 }
 
 export interface FlowPoint {
@@ -67,7 +64,6 @@ export interface SimSnapshot {
   };
   totalArrivals: number;
   totalDepartures: number;
-  totalBalked: number;
 }
 
 export interface SimState {
@@ -78,7 +74,6 @@ export interface SimState {
   /** Cumulative counters */
   totalArrivals: number;
   totalDepartures: number;
-  totalBalked: number;
   /** Sum of cycle times for departed cars (for avg calculation) */
   totalCycleTime: number;
   /** Flow data for chart */

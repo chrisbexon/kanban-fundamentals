@@ -21,7 +21,7 @@ export function WorkerPool({ workers, selectedWorkerId, onSelectWorker, onUnassi
         <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block" />
         Workers
         <span className="text-[9px] font-normal normal-case tracking-normal ml-auto" style={{ color: "var(--text-muted)" }}>
-          {disabled ? "Resolve to continue" : "Click \u00d7 to unassign, then select a worker and click an item"}
+          {disabled ? "Resolve to continue" : "Drag a worker onto an item to assign \u00b7 Click \u00d7 to unassign"}
         </span>
       </div>
       <div className="flex flex-wrap gap-2">

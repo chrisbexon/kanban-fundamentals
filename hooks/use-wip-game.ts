@@ -118,6 +118,27 @@ export function useWipGame() {
     setWorkers(result.workers);
   }, [phase, items, workers]);
 
+  /** Direct assign: drop a worker onto an item (bypasses select step) */
+  const handleAssignWorkerToItem = useCallback((workerId: string, itemId: string) => {
+    if (phase !== "assign") return;
+    const worker = workers.find((w) => w.id === workerId);
+    const item = items.find((it) => it.id === itemId);
+    if (!worker || !item) return;
+    // Unassign first if worker is already assigned elsewhere
+    let currentItems = items;
+    let currentWorkers = workers;
+    if (worker.assignedItemId !== null) {
+      const unResult = unassignWorker(currentItems, currentWorkers, workerId);
+      currentItems = unResult.items;
+      currentWorkers = unResult.workers;
+    }
+    if (!canAssign(currentItems, item, worker, settings)) return;
+    const result = assignWorker(currentItems, currentWorkers, workerId, itemId, settings);
+    setItems(result.items);
+    setWorkers(result.workers);
+    setSelectedWorkerId(null);
+  }, [phase, items, workers, settings]);
+
   const handleResolveRound = useCallback(() => {
     if (phase !== "assign") return;
     const nextDay = day + 1;
@@ -251,6 +272,7 @@ export function useWipGame() {
     selectWorker: handleSelectWorker,
     clickItem: handleClickItem,
     unassignWorker: handleUnassignWorker,
+    assignWorkerToItem: handleAssignWorkerToItem,
     resolveRound: handleResolveRound,
     acknowledgeRound: () => {},
     updateSettings: handleUpdateSettings,

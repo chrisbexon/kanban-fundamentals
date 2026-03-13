@@ -85,6 +85,7 @@ export default function WipLimitsLesson() {
           onSelectWorker={game.selectWorker}
           onClickItem={game.clickItem}
           onUnassignWorker={game.unassignWorker}
+          onAssignWorkerToItem={game.assignWorkerToItem}
           onResolve={game.resolveRound}
           onAcknowledge={game.acknowledgeRound}
           onPullItem={game.pullItem}
@@ -127,6 +128,7 @@ export default function WipLimitsLesson() {
             onSelectWorker={game.selectWorker}
             onClickItem={game.clickItem}
             onUnassignWorker={game.unassignWorker}
+            onAssignWorkerToItem={game.assignWorkerToItem}
             onResolve={game.resolveRound}
             onAcknowledge={game.acknowledgeRound}
             onPullItem={game.pullItem}
@@ -170,6 +172,7 @@ export default function WipLimitsLesson() {
             onSelectWorker={game.selectWorker}
             onClickItem={game.clickItem}
             onUnassignWorker={game.unassignWorker}
+            onAssignWorkerToItem={game.assignWorkerToItem}
             onResolve={game.resolveRound}
             onAcknowledge={game.acknowledgeRound}
             onPullItem={game.pullItem}
