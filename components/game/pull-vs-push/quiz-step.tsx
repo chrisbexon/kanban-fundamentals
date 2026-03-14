@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { QUIZ } from "@/content/lesson-pull-vs-push/config";
 import { StepHeader } from "@/components/lesson/step-header";
 import { Card } from "@/components/ui/card";

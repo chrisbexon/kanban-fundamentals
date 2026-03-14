@@ -1,0 +1,151 @@
+{
+  "common": {
+    "backToDashboard": "Zurück zum Dashboard",
+    "startLesson": "Lektion starten",
+    "comingSoon": "Demnächst verfügbar",
+    "back": "Zurück",
+    "next": "Weiter",
+    "retry": "Erneut versuchen",
+    "submit": "Absenden",
+    "loading": "Wird geladen...",
+    "lesson": "Lektion",
+    "lessonsAvailable": "{available} von {total} Lektionen verfügbar",
+    "logIn": "Anmelden",
+    "signUp": "Registrieren",
+    "logOut": "Abmelden",
+    "skipToContent": "Zum Inhalt springen"
+  },
+  "dashboard": {
+    "tagline": "Genius Teams · Trainingsplattform",
+    "title": "Kanban Fundamentals",
+    "subtitle": "Lernen Sie Kanban-Prinzipien durch interaktive Simulationen, reale Daten und praktische Übungen. Arbeiten Sie sich durch jeden Abschnitt, um Abzeichen und ein Abschlusszertifikat zu erhalten."
+  },
+  "sections": {
+    "introduction": {
+      "title": "Einführung",
+      "subtitle": "Kontext & Grundlagen"
+    },
+    "theory": {
+      "title": "Theorie & Prinzipien",
+      "subtitle": "Kernkonzepte durch Simulation"
+    },
+    "practice": {
+      "title": "Kanban in der Praxis",
+      "subtitle": "Das Gelernte anwenden"
+    },
+    "visualisation": {
+      "title": "Workflow-Visualisierung",
+      "subtitle": "Ihr Board gestalten"
+    },
+    "improving": {
+      "title": "Workflow verbessern",
+      "subtitle": "Kontinuierliche Verbesserung"
+    },
+    "closing": {
+      "title": "Abschluss",
+      "subtitle": "Wiederholung & Zertifizierung"
+    }
+  },
+  "lessons": {
+    "welcome": {
+      "title": "Willkommen & Lernziele",
+      "description": "Kursübersicht, Funktionsweise der Plattform und was Sie am Ende erreicht haben werden."
+    },
+    "why-kanban": {
+      "title": "Warum Kanban?",
+      "description": "Erzählen Sie uns von Ihrer Rolle und Ihren Zielen. Ihre Antworten helfen uns, die Lernerfahrung anzupassen."
+    },
+    "history": {
+      "title": "Ein kurzer historischer Überblick",
+      "description": "Von der Warteschlangentheorie und Toyota bis hin zur modernen Wissensarbeit — wie wir hierher gekommen sind."
+    },
+    "industry-today": {
+      "title": "Kanban in der heutigen Industrie",
+      "description": "Praxisanwendungen in der Softwareentwicklung, im Gesundheitswesen, im Marketing und darüber hinaus."
+    },
+    "kanban-principles": {
+      "title": "Kanban-Prinzipien & Strategie",
+      "description": "Die Definition, das Ziel (effektiv, vorhersehbar, effizient), das Toyota-Produktionssystem und die drei Kernpraktiken."
+    },
+    "penny-game": {
+      "title": "Batch-Größe & Flow",
+      "description": "Das Penny Game — entdecken Sie, wie die Batch-Größe Durchlaufzeit, Durchsatz und Flow beeinflusst."
+    },
+    "littles-law": {
+      "title": "Little's Law",
+      "description": "Führen Sie eine Drive-through-Simulation durch und verstehen Sie, warum Zykluszeit = WIP ÷ Durchsatz alles verändert."
+    },
+    "kanban-game": {
+      "title": "Das Kanban-Spiel",
+      "description": "Drei Runden auf einem vollständigen Kanban-Board — WIP-Limits, Arbeitsalter und rundenübergreifende Flow-Analyse."
+    },
+    "pull-vs-push": {
+      "title": "Pull- vs. Push-Systeme",
+      "description": "Vergleichen Sie Push- und Pull-Systeme direkt gegenüber und sehen Sie, wie Pull eine natürliche Selbstregulierung erzeugt."
+    },
+    "flow-metrics": {
+      "title": "Flow-Metriken & Prognosen",
+      "description": "Monte Carlo-Simulation, Durchsatzanalyse, richtige Dimensionierung und wahrscheinlichkeitsbasierte Prognosen mit echten Daten."
+    },
+    "workflow-definition": {
+      "title": "Den Workflow definieren",
+      "description": "Die sechs Mindestelemente, die jedes Kanban-System benötigt. Identifizieren Sie sie auf dem Kanban-Spielboard."
+    },
+    "workflow-scenarios": {
+      "title": "Workflows erkennen",
+      "description": "Identifizieren Sie Workflow-Elemente in realen Systemen: Drive-throughs, Softwareteams und mehr."
+    },
+    "board-designer": {
+      "title": "Ihr Board gestalten",
+      "description": "Erstellen Sie ein vollständig angepasstes Kanban-Board mit Spalten, Swimlanes, WIP-Limits und expliziten Richtlinien."
+    },
+    "applying-littles-law": {
+      "title": "Little's Law anwenden",
+      "description": "Nutzen Sie Little's Law zur Prognose eines echten Releases — und entdecken Sie, was die Zahlen wirklich aussagen."
+    },
+    "flow-metrics-deep-dive": {
+      "title": "Flow-Metriken im Detail",
+      "description": "Erkunden Sie Ihre Kanban-Spieldaten anhand von Zykluszeit-, Durchsatz-, WIP- und Aging-Diagrammen."
+    },
+    "board-analysis": {
+      "title": "Board-Analyse",
+      "description": "Analysieren Sie vier Kanban-Board-Szenarien und identifizieren Sie, was in jedem System passiert."
+    },
+    "workflow-improvements": {
+      "title": "Workflow-Verbesserungen definieren",
+      "description": "Ordnen Sie Flow-Metriken den Workflow-Elementen zu und bestimmen Sie, was gemessen und verbessert werden soll."
+    },
+    "littles-law-applied": {
+      "title": "Little's Law anwenden",
+      "description": "Nutzen Sie Little's Law als Diagnosewerkzeug. Analysieren Sie Praxisszenarien und entlarven Sie unrealistische Versprechen."
+    },
+    "closing": {
+      "title": "Abschluss & Zertifikat",
+      "description": "Mythos oder Fakt-Challenge, persoenliche Reflexion, Feedback und Ihr Abschlusszertifikat."
+    }
+  },
+  "auth": {
+    "loginTitle": "Willkommen zurück",
+    "loginSubtitle": "Melden Sie sich an, um Ihr Kanban-Training fortzusetzen",
+    "signupTitle": "Konto erstellen",
+    "signupSubtitle": "Starten Sie Ihr Kanban Fundamentals Training",
+    "email": "E-Mail-Adresse",
+    "password": "Passwort",
+    "displayName": "Anzeigename",
+    "magicLink": "Magic Link senden",
+    "orContinueWith": "oder weiter mit",
+    "noAccount": "Noch kein Konto?",
+    "hasAccount": "Bereits ein Konto vorhanden?",
+    "checkEmail": "Prüfen Sie Ihre E-Mails auf einen Anmeldelink"
+  },
+  "quiz": {
+    "knowledgeCheck": "Wissensüberprüfung",
+    "submitAnswers": "Antworten absenden",
+    "answerAll": "Beantworten Sie alle {count} Fragen, um fortzufahren",
+    "lessonComplete": "Lektion abgeschlossen!",
+    "almostThere": "Fast geschafft",
+    "score": "Sie haben {score} von {total} Punkten erreicht.",
+    "passMessage": "Gut gemacht! Sie haben ein solides Verständnis bewiesen.",
+    "failMessage": "Schauen Sie sich den Lektionsinhalt nochmals an und versuchen Sie es erneut, wenn Sie bereit sind."
+  }
+}

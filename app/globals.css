@@ -71,17 +71,17 @@
 
   /* Text */
   --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary: #334155;
-  --text-muted: #64748b;
-  --text-dimmer: #94a3b8;
-  --text-faint: #cbd5e1;
+  --text-secondary: #334155;
+  --text-tertiary: #1e293b;
+  --text-muted: #475569;
+  --text-dimmer: #64748b;
+  --text-faint: #94a3b8;
   --text-heading-from: #0f172a;
-  --text-heading-to: #475569;
-  --text-quiz-option: #475569;
-  --text-coin-idle: #94a3b8;
-  --text-coin-queue: #64748b;
-  --text-coin-counter-dim: #94a3b8;
+  --text-heading-to: #334155;
+  --text-quiz-option: #334155;
+  --text-coin-idle: #64748b;
+  --text-coin-queue: #475569;
+  --text-coin-counter-dim: #64748b;
 
   /* Borders */
   --border-hairline: rgba(0, 0, 0, 0.06);

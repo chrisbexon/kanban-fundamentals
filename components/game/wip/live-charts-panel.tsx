@@ -6,6 +6,7 @@ import { CfdChart } from "@/components/charts/wip/cfd-chart";
 import { CtScatterChart } from "@/components/charts/wip/ct-scatter-chart";
 import { WipThroughputChart } from "@/components/charts/wip/throughput-chart";
 import { AgingWipChart } from "@/components/charts/wip/aging-wip-chart";
+import { WipAgingByStateChart } from "@/components/charts/wip/aging-by-state-chart";
 import { WipRunChart } from "@/components/charts/wip/wip-run-chart";
 
 interface LiveChartsPanelProps {
@@ -57,6 +58,13 @@ export function LiveChartsPanel({ items, snapshots, settings, currentDay }: Live
         desc="Current age of every in-progress item."
       >
         <AgingWipChart items={items} currentDay={currentDay} sleDays={settings.sleDays} />
+      </ChartCard>
+
+      <ChartCard
+        title="Aging WIP by Workflow State"
+        desc="Items by stage and age. Bands show SLE probability — items further right can afford to be older."
+      >
+        <WipAgingByStateChart items={items} currentDay={currentDay} sleDays={settings.sleDays} height={260} />
       </ChartCard>
 
       <ChartCard

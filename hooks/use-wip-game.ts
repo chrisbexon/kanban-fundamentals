@@ -5,6 +5,7 @@ import type {
   WipWorkItem, Worker, WipSettings, DaySnapshot,
   RoundResult, GameEvent, RoundPhase, WorkColor,
 } from "@/types/wip-game";
+import type { GameSaveState } from "./use-game-persistence";
 import { DEFAULT_SETTINGS, SEED_DAYS, PLAYABLE_ROUNDS, TOTAL_GAME_DAYS } from "@/lib/constants/wip-game";
 import { loadSeed } from "@/lib/engine/wip-seed-loader";
 import {
@@ -238,6 +239,22 @@ export function useWipGame() {
     );
   }, []);
 
+  const loadSavedState = useCallback((saved: GameSaveState) => {
+    setItems(saved.items);
+    setWorkers(makeWorkers());
+    setDay(saved.currentDay);
+    setPhase("assign");
+    setSettings(saved.settings);
+    setSnapshots(saved.snapshots);
+    setRoundResults([]);
+    setEvents([]);
+    setLastResult(null);
+    setSelectedWorkerId(null);
+    setGameOver(saved.gameOver);
+    setGameRound(saved.gameRound);
+    setRoundHistories(saved.roundHistories);
+  }, []);
+
   return {
     // State
     items,
@@ -281,5 +298,6 @@ export function useWipGame() {
     restart: handleRestart,
     startNextRound: handleStartNextRound,
     acknowledgeEvent: handleAcknowledgeEvent,
+    loadSavedState,
   };
 }

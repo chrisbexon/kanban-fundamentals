@@ -1,0 +1,151 @@
+{
+  "common": {
+    "backToDashboard": "ダッシュボードに戻る",
+    "startLesson": "レッスンを開始",
+    "comingSoon": "近日公開",
+    "back": "戻る",
+    "next": "次へ",
+    "retry": "再試行",
+    "submit": "送信",
+    "loading": "読み込み中...",
+    "lesson": "レッスン",
+    "lessonsAvailable": "{total}件中{available}件のレッスンが利用可能",
+    "logIn": "ログイン",
+    "signUp": "新規登録",
+    "logOut": "ログアウト",
+    "skipToContent": "コンテンツにスキップ"
+  },
+  "dashboard": {
+    "tagline": "Genius Teams · トレーニングプラットフォーム",
+    "title": "Kanban ファンダメンタルズ",
+    "subtitle": "インタラクティブなシミュレーション、実データ、実践的な演習を通じてKanbanの原則を習得しましょう。各セクションを進めてバッジと修了証を獲得してください。"
+  },
+  "sections": {
+    "introduction": {
+      "title": "イントロダクション",
+      "subtitle": "背景と基礎"
+    },
+    "theory": {
+      "title": "理論と原則",
+      "subtitle": "シミュレーションによるコアコンセプト"
+    },
+    "practice": {
+      "title": "Kanban の実践",
+      "subtitle": "学んだことを応用する"
+    },
+    "visualisation": {
+      "title": "ワークフローの可視化",
+      "subtitle": "ボードをデザインする"
+    },
+    "improving": {
+      "title": "ワークフローの改善",
+      "subtitle": "継続的改善"
+    },
+    "closing": {
+      "title": "クロージング",
+      "subtitle": "復習と認定"
+    }
+  },
+  "lessons": {
+    "welcome": {
+      "title": "ようこそ・学習目標",
+      "description": "コースの概要、プラットフォームの使い方、そして修了後に達成できることを紹介します。"
+    },
+    "why-kanban": {
+      "title": "なぜ Kanban なのか？",
+      "description": "あなたの役割と目標を教えてください。回答をもとにエクスペリエンスをカスタマイズします。"
+    },
+    "history": {
+      "title": "簡単な歴史",
+      "description": "待ち行列理論とトヨタ生産方式から現代のナレッジワークまで — Kanban がどのように発展してきたかを学びます。"
+    },
+    "industry-today": {
+      "title": "現代産業における Kanban",
+      "description": "ソフトウェア開発、医療、マーケティングなど様々な分野での実際の活用事例を紹介します。"
+    },
+    "kanban-principles": {
+      "title": "Kanban の原則と戦略",
+      "description": "Kanban の定義、目標（効果的・予測可能・効率的）、トヨタ生産方式、そして3つのコアプラクティスを学びます。"
+    },
+    "penny-game": {
+      "title": "バッチサイズとフロー",
+      "description": "ペニーゲーム — バッチサイズがリードタイム、スループット、フローにどう影響するかを体験します。"
+    },
+    "littles-law": {
+      "title": "Little's Law",
+      "description": "ドライブスルーシミュレーションを実行して、サイクルタイム = WIP ÷ スループットという公式がなぜ重要なのかを体感します。"
+    },
+    "kanban-game": {
+      "title": "Kanban ゲーム",
+      "description": "フル Kanban ボードで3ラウンド — WIP 制限、作業アイテムの経過時間、ラウンドをまたいだフロー分析を体験します。"
+    },
+    "pull-vs-push": {
+      "title": "プルシステムとプッシュシステム",
+      "description": "プッシュとプルのシステムを並べて比較し、プルが自然な自己調整を生み出す仕組みを理解します。"
+    },
+    "flow-metrics": {
+      "title": "フローメトリクスと予測",
+      "description": "Monte Carlo シミュレーション、スループット分析、適切なサイズ設定、実データを用いた確率ベースの予測を学びます。"
+    },
+    "workflow-definition": {
+      "title": "ワークフローの定義",
+      "description": "すべての Kanban システムが必要とする6つの最小要素を学び、Kanban ゲームボード上でそれらを特定します。"
+    },
+    "workflow-scenarios": {
+      "title": "ワークフローの識別",
+      "description": "ドライブスルー、ソフトウェアチームなど、現実のシステムにおけるワークフロー要素を見つけます。"
+    },
+    "board-designer": {
+      "title": "ボードをデザインする",
+      "description": "カラム、スイムレーン、WIP 制限、明示的なポリシーを備えた完全カスタマイズの Kanban ボードを構築します。"
+    },
+    "applying-littles-law": {
+      "title": "Little's Law の応用",
+      "description": "Little's Law を使って実際のリリースを予測し、その数値が実際に何を意味するかを探ります。"
+    },
+    "flow-metrics-deep-dive": {
+      "title": "フローメトリクス詳細分析",
+      "description": "Kanban ゲームのデータをサイクルタイム、スループット、WIP、エイジングチャートを通じて深く探ります。"
+    },
+    "board-analysis": {
+      "title": "ボード分析",
+      "description": "4つの Kanban ボードシナリオを分析し、各システムで何が起きているかを特定します。"
+    },
+    "workflow-improvements": {
+      "title": "ワークフロー改善の定義",
+      "description": "フローメトリクスとワークフロー要素を対応付け、何を測定・改善すべきかを決定します。"
+    },
+    "littles-law-applied": {
+      "title": "Little's Law の実践応用",
+      "description": "Little's Law を診断ツールとして使い、現実のシナリオを分析して不可能な約束を見抜きます。"
+    },
+    "closing": {
+      "title": "まとめと修了証",
+      "description": "神話か事実かチャレンジ、個人的な振り返り、フィードバック、そして修了証の授与。"
+    }
+  },
+  "auth": {
+    "loginTitle": "おかえりなさい",
+    "loginSubtitle": "ログインして Kanban トレーニングを続けましょう",
+    "signupTitle": "アカウントを作成",
+    "signupSubtitle": "Kanban ファンダメンタルズ トレーニングを始めましょう",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "displayName": "表示名",
+    "magicLink": "マジックリンクを送信",
+    "orContinueWith": "または以下で続ける",
+    "noAccount": "アカウントをお持ちでない方は",
+    "hasAccount": "すでにアカウントをお持ちの方は",
+    "checkEmail": "ログインリンクをメールでご確認ください"
+  },
+  "quiz": {
+    "knowledgeCheck": "理解度チェック",
+    "submitAnswers": "回答を送信",
+    "answerAll": "続けるには{count}問すべてに答えてください",
+    "lessonComplete": "レッスン完了！",
+    "almostThere": "もう少しです",
+    "score": "{total}点中{score}点でした。",
+    "passMessage": "よくできました！しっかりと理解できています。",
+    "failMessage": "レッスン内容を見直して、準備ができたら再挑戦してください。"
+  }
+}

@@ -1,0 +1,151 @@
+{
+  "common": {
+    "backToDashboard": "Back to Dashboard",
+    "startLesson": "Start Lesson",
+    "comingSoon": "Coming Soon",
+    "back": "Back",
+    "next": "Next",
+    "retry": "Retry",
+    "submit": "Submit",
+    "loading": "Loading...",
+    "lesson": "Lesson",
+    "lessonsAvailable": "{available} of {total} lessons available",
+    "logIn": "Log In",
+    "signUp": "Sign Up",
+    "logOut": "Log Out",
+    "skipToContent": "Skip to content"
+  },
+  "dashboard": {
+    "tagline": "Genius Teams · Training Platform",
+    "title": "Kanban Fundamentals",
+    "subtitle": "Master Kanban principles through interactive simulations, real data, and hands-on practice. Work through each section to earn badges and a certificate of completion."
+  },
+  "sections": {
+    "introduction": {
+      "title": "Introduction",
+      "subtitle": "Context & foundations"
+    },
+    "theory": {
+      "title": "Theory & Principles",
+      "subtitle": "Core concepts through simulation"
+    },
+    "practice": {
+      "title": "Kanban in Practice",
+      "subtitle": "Applying what you've learned"
+    },
+    "visualisation": {
+      "title": "Workflow Visualisation",
+      "subtitle": "Designing your board"
+    },
+    "improving": {
+      "title": "Improving the Workflow",
+      "subtitle": "Continuous improvement"
+    },
+    "closing": {
+      "title": "Closing",
+      "subtitle": "Review & certification"
+    }
+  },
+  "lessons": {
+    "welcome": {
+      "title": "Welcome & Learning Objectives",
+      "description": "Course overview, how the platform works, and what you'll achieve by the end."
+    },
+    "why-kanban": {
+      "title": "Why Kanban?",
+      "description": "Tell us about your role and goals. Your answers help us tailor the experience."
+    },
+    "history": {
+      "title": "A Brief History",
+      "description": "From queuing theory and Toyota to modern knowledge work — how we got here."
+    },
+    "industry-today": {
+      "title": "Kanban in Industry Today",
+      "description": "Real-world applications across software, healthcare, marketing, and beyond."
+    },
+    "kanban-principles": {
+      "title": "Kanban Principles & Strategy",
+      "description": "The definition, the goal (effective, predictable, efficient), the Toyota Production System, and the three core practices."
+    },
+    "penny-game": {
+      "title": "Batch Size & Flow",
+      "description": "The Penny Game — discover how batch size affects lead time, throughput, and flow."
+    },
+    "littles-law": {
+      "title": "Little's Law",
+      "description": "Run a drive-through simulation and see why Cycle Time = WIP ÷ Throughput changes everything."
+    },
+    "kanban-game": {
+      "title": "The Kanban Game",
+      "description": "Three rounds on a full Kanban board — WIP limits, work item age, and flow analysis across rounds."
+    },
+    "pull-vs-push": {
+      "title": "Pull vs Push Systems",
+      "description": "Compare push and pull systems side by side and see how pull creates natural self-regulation."
+    },
+    "flow-metrics": {
+      "title": "Flow Metrics & Forecasting",
+      "description": "Monte Carlo simulation, throughput analysis, right-sizing, and probability-based forecasting with real data."
+    },
+    "workflow-definition": {
+      "title": "Defining the Workflow",
+      "description": "The six minimum elements every Kanban system needs. Identify them on the Kanban Game board."
+    },
+    "workflow-scenarios": {
+      "title": "Identifying Workflows",
+      "description": "Spot workflow elements in real-world systems: drive-throughs, software teams, and more."
+    },
+    "board-designer": {
+      "title": "Design Your Board",
+      "description": "Build a fully customised Kanban board with columns, swimlanes, WIP limits, and explicit policies."
+    },
+    "applying-littles-law": {
+      "title": "Applying Little's Law",
+      "description": "Use Little's Law to forecast a real release — and discover what the numbers actually tell you."
+    },
+    "flow-metrics-deep-dive": {
+      "title": "Flow Metrics Deep Dive",
+      "description": "Explore your Kanban Game data through cycle time, throughput, WIP, and aging charts."
+    },
+    "board-analysis": {
+      "title": "Board Analysis",
+      "description": "Analyse four Kanban board scenarios and identify what's happening in each system."
+    },
+    "workflow-improvements": {
+      "title": "Defining Workflow Improvements",
+      "description": "Match flow metrics to workflow elements and determine what to measure and improve."
+    },
+    "littles-law-applied": {
+      "title": "Applying Little\u2019s Law",
+      "description": "Use Little\u2019s Law as a diagnostic tool. Analyze real-world scenarios and expose impossible promises."
+    },
+    "closing": {
+      "title": "Wrap-Up & Certificate",
+      "description": "Myth or Fact challenge, personal reflection, feedback, and your certificate of completion."
+    }
+  },
+  "auth": {
+    "loginTitle": "Welcome Back",
+    "loginSubtitle": "Log in to continue your Kanban training",
+    "signupTitle": "Create Account",
+    "signupSubtitle": "Start your Kanban Fundamentals training",
+    "email": "Email",
+    "password": "Password",
+    "displayName": "Display Name",
+    "magicLink": "Send Magic Link",
+    "orContinueWith": "or continue with",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "checkEmail": "Check your email for a login link"
+  },
+  "quiz": {
+    "knowledgeCheck": "Knowledge Check",
+    "submitAnswers": "Submit Answers",
+    "answerAll": "Answer all {count} questions to continue",
+    "lessonComplete": "Lesson Complete!",
+    "almostThere": "Almost There",
+    "score": "You scored {score}/{total}.",
+    "passMessage": "Well done! You've demonstrated a solid understanding.",
+    "failMessage": "Review the lesson content and try again when you're ready."
+  }
+}

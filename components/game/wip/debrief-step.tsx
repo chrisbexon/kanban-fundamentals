@@ -10,6 +10,7 @@ import { CtScatterChart } from "@/components/charts/wip/ct-scatter-chart";
 import { CtHistogramChart } from "@/components/charts/wip/ct-histogram-chart";
 import { WipThroughputChart } from "@/components/charts/wip/throughput-chart";
 import { AgingWipChart } from "@/components/charts/wip/aging-wip-chart";
+import { WipAgingByStateChart } from "@/components/charts/wip/aging-by-state-chart";
 import { FlowEfficiencyChart } from "@/components/charts/wip/flow-efficiency-chart";
 import { HeatmapChart } from "@/components/charts/wip/heatmap-chart";
 import { WipRunChart } from "@/components/charts/wip/wip-run-chart";
@@ -160,6 +161,14 @@ export function WipDebriefStep({ items, snapshots, settings, currentDay, roundHi
           desc="Current age of every in-progress item. Items approaching the red SLE line need attention before they become outliers."
         >
           <AgingWipChart items={items} currentDay={currentDay} sleDays={settings.sleDays} />
+        </ChartCard>
+
+        {/* Aging WIP by Workflow State */}
+        <ChartCard
+          title="Aging WIP by Workflow State"
+          desc="Items positioned by workflow stage and age. Coloured bands show the probability of meeting the SLE — items further right can afford to be older (less remaining work). Green = safe, red = at risk."
+        >
+          <WipAgingByStateChart items={items} currentDay={currentDay} sleDays={settings.sleDays} height={280} />
         </ChartCard>
 
         {/* Flow Efficiency */}
