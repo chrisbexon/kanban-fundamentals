@@ -138,6 +138,21 @@
     "hasAccount": "すでにアカウントをお持ちの方は",
     "checkEmail": "ログインリンクをメールでご確認ください"
   },
+  "chat": {
+    "title": "トレーニングアシスタント",
+    "subtitle": "Kanban について何でも聞いてください",
+    "emptyPrompt": "トレーニング内容について何でもお聞きください",
+    "placeholder": "質問を入力...",
+    "send": "送信",
+    "close": "チャットを閉じる",
+    "open": "質問する",
+    "needHelp": "人のサポートが必要ですか？",
+    "joinCommunity": "WhatsApp ラーニングコミュニティに参加",
+    "q1": "Little's Law とは何ですか？",
+    "q2": "WIP 制限はなぜ重要ですか？",
+    "q3": "Monte Carlo 予測はどう機能しますか？",
+    "q4": "ライトサイジングとは何ですか？"
+  },
   "quiz": {
     "knowledgeCheck": "理解度チェック",
     "submitAnswers": "回答を送信",

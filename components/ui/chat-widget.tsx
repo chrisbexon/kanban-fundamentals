@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
 interface Message {
   role: "user" | "assistant";
@@ -12,6 +13,8 @@ interface ChatWidgetProps {
 }
 
 export function ChatWidget({ lessonContext }: ChatWidgetProps) {
+  const locale = useLocale();
+  const t = useTranslations("chat");
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -50,7 +53,7 @@ export function ChatWidget({ lessonContext }: ChatWidgetProps) {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages, lessonContext }),
+        body: JSON.stringify({ messages: newMessages, lessonContext, locale }),
       });
 
       if (!res.ok) {
@@ -101,8 +104,8 @@ export function ChatWidget({ lessonContext }: ChatWidgetProps) {
               ?
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>Training Assistant</div>
-              <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>Ask anything about Kanban</div>
+              <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>{t("title")}</div>
+              <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>{t("subtitle")}</div>
             </div>
             <button
               onClick={() => setOpen(false)}
@@ -118,13 +121,13 @@ export function ChatWidget({ lessonContext }: ChatWidgetProps) {
             {messages.length === 0 && !loading && (
               <div className="flex flex-col gap-2 mt-4">
                 <div className="text-xs text-center mb-2" style={{ color: "var(--text-muted)" }}>
-                  Ask me anything about the training material
+                  {t("emptyPrompt")}
                 </div>
                 {[
-                  "What is Little's Law?",
-                  "Why do WIP limits matter?",
-                  "How does Monte Carlo forecasting work?",
-                  "What does right-sizing mean?",
+                  t("q1"),
+                  t("q2"),
+                  t("q3"),
+                  t("q4"),
                 ].map((q) => (
                   <button
                     key={q}
@@ -136,7 +139,7 @@ export function ChatWidget({ lessonContext }: ChatWidgetProps) {
                       fetch("/api/chat", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ messages: [userMsg], lessonContext }),
+                        body: JSON.stringify({ messages: [userMsg], lessonContext, locale }),
                       })
                         .then((res) => res.json())
                         .then((data) => {
@@ -221,7 +224,7 @@ export function ChatWidget({ lessonContext }: ChatWidgetProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask a question..."
+              placeholder={t("placeholder")}
               disabled={loading}
               className="flex-1 rounded-lg px-3 py-2 text-xs border-none outline-none disabled:opacity-50"
               style={{
@@ -239,7 +242,7 @@ export function ChatWidget({ lessonContext }: ChatWidgetProps) {
                 color: "#fff",
               }}
             >
-              Send
+              {t("send")}
             </button>
           </div>
 
@@ -249,9 +252,9 @@ export function ChatWidget({ lessonContext }: ChatWidgetProps) {
             style={{ borderTop: "1px solid var(--border-faint)", background: "rgba(34,197,94,0.03)" }}
           >
             <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>
-              Need human help?{" "}
+              {t("needHelp")}{" "}
               <span style={{ color: "#22c55e", fontWeight: 600, cursor: "pointer" }}>
-                Join the WhatsApp learning community
+                {t("joinCommunity")}
               </span>
             </div>
           </div>
@@ -270,7 +273,7 @@ export function ChatWidget({ lessonContext }: ChatWidgetProps) {
           color: "#fff",
           fontSize: 20,
         }}
-        title={open ? "Close chat" : "Ask a question"}
+        title={open ? t("close") : t("open")}
       >
         {open ? "\u00D7" : "?"}
       </button>

@@ -4,18 +4,30 @@ import { CHAT_SYSTEM_PROMPT } from "@/lib/chat-context";
 
 const client = new Anthropic();
 
+const LOCALE_NAMES: Record<string, string> = {
+  en: "English",
+  ja: "Japanese",
+  de: "German",
+};
+
 export async function POST(req: NextRequest) {
   try {
-    const { messages, lessonContext } = await req.json();
+    const { messages, lessonContext, locale } = await req.json();
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "Messages required" }, { status: 400 });
     }
 
-    // Build system prompt with optional lesson context
+    // Build system prompt with optional lesson context and locale
     let system = CHAT_SYSTEM_PROMPT;
     if (lessonContext) {
       system += `\n\n## Current lesson context\nThe learner is currently on: ${lessonContext}. Tailor your answers to be relevant to what they are studying right now.`;
+    }
+
+    // Language instruction — respond in the learner's selected language
+    const lang = LOCALE_NAMES[locale] ?? "English";
+    if (locale && locale !== "en") {
+      system += `\n\n## Language\nThe learner has selected ${lang} as their language. You MUST respond in ${lang}. Use natural, fluent ${lang} — not machine-translated text. Kanban terminology (WIP, throughput, cycle time, etc.) can remain in English as these are industry-standard terms.`;
     }
 
     // Map messages to Anthropic format

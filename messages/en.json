@@ -138,6 +138,21 @@
     "hasAccount": "Already have an account?",
     "checkEmail": "Check your email for a login link"
   },
+  "chat": {
+    "title": "Training Assistant",
+    "subtitle": "Ask anything about Kanban",
+    "emptyPrompt": "Ask me anything about the training material",
+    "placeholder": "Ask a question...",
+    "send": "Send",
+    "close": "Close chat",
+    "open": "Ask a question",
+    "needHelp": "Need human help?",
+    "joinCommunity": "Join the WhatsApp learning community",
+    "q1": "What is Little's Law?",
+    "q2": "Why do WIP limits matter?",
+    "q3": "How does Monte Carlo forecasting work?",
+    "q4": "What does right-sizing mean?"
+  },
   "quiz": {
     "knowledgeCheck": "Knowledge Check",
     "submitAnswers": "Submit Answers",
