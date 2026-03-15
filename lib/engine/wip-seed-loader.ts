@@ -11,27 +11,48 @@ export interface SeedData {
 
 const ACTIVE_LOCATIONS = new Set(["red-active", "blue-active", "green"]);
 
-/** Load and parse the seed JSON */
+/** Deep-copy a work item so the original seed JSON is never mutated */
+function cloneSeedItem(it: WipWorkItem): WipWorkItem {
+  return {
+    ...it,
+    work: {
+      red: { ...it.work.red },
+      blue: { ...it.work.blue },
+      green: { ...it.work.green },
+    },
+    blockerWork: { ...it.blockerWork },
+    assignedWorkerIds: [...it.assignedWorkerIds],
+  };
+}
+
+/** Load and parse the seed JSON — returns a fresh deep copy every call */
 export function loadSeed(): SeedData {
-  const data = seedData as unknown as SeedData;
-  validateSeed(data);
+  const raw = seedData as unknown as SeedData;
+  validateSeed(raw);
+
+  // Deep-copy items so the imported module is never mutated
+  const items = raw.items.map(cloneSeedItem);
 
   // Sanitize: clear blocked state on items not in active columns
-  for (const item of data.items) {
+  for (const item of items) {
     if (item.blocked && !ACTIVE_LOCATIONS.has(item.location)) {
       item.blocked = false;
       item.blockerWork = { required: 0, done: 0 };
     }
   }
 
-  // Ensure snapshots have round field (seed data predates rounds)
-  for (const snap of data.snapshots) {
-    if (snap.round === undefined) {
-      (snap as DaySnapshot).round = 1;
-    }
-  }
+  // Deep-copy snapshots and ensure round field
+  const snapshots = raw.snapshots.map((snap) => ({
+    ...snap,
+    round: snap.round ?? 1,
+  }));
 
-  return data;
+  return {
+    seedDay: raw.seedDay,
+    nextItemId: raw.nextItemId,
+    items,
+    snapshots: snapshots as DaySnapshot[],
+  };
 }
 
 /** Validate seed data structure */
