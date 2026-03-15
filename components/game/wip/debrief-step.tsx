@@ -32,67 +32,101 @@ function ChartCard({ title, desc, children }: ChartCardProps) {
   );
 }
 
+interface RoundData {
+  round: number;
+  items: WipWorkItem[];
+  snapshots: DaySnapshot[];
+  settings: WipSettings;
+}
+
 interface WipDebriefStepProps {
   items: WipWorkItem[];
   snapshots: DaySnapshot[];
   settings: WipSettings;
   currentDay: number;
-  roundHistories?: { round: number; items: WipWorkItem[]; settings: WipSettings }[];
+  roundHistories?: RoundData[];
   onNext: () => void;
   onBack: () => void;
 }
 
-function RoundComparisonCard({ roundHistories }: { roundHistories: { round: number; items: WipWorkItem[]; settings: WipSettings }[] }) {
-  if (roundHistories.length === 0) return null;
+function computeRoundStats(rh: RoundData) {
+  const done = rh.items.filter((it) => it.location === "done" && it.dayStarted && it.dayDone);
+  const avgCt = done.length > 0
+    ? done.reduce((s, it) => s + (it.dayDone! - it.dayStarted!), 0) / done.length
+    : 0;
+  return {
+    round: rh.round,
+    delivered: done.length,
+    avgCycleTime: avgCt,
+    limits: rh.settings.wipLimits,
+    snapshots: rh.snapshots,
+  };
+}
 
-  const roundStats = roundHistories.map((rh) => {
-    const done = rh.items.filter((it) => it.location === "done" && it.dayStarted && it.dayDone);
-    const avgCt = done.length > 0
-      ? done.reduce((s, it) => s + (it.dayDone! - it.dayStarted!), 0) / done.length
-      : 0;
-    const totalWipLimit = rh.settings.wipLimits.red + rh.settings.wipLimits.blue + rh.settings.wipLimits.green;
-    return {
-      round: rh.round,
-      delivered: done.length,
-      avgCycleTime: avgCt,
-      wipLimit: totalWipLimit,
-      limits: rh.settings.wipLimits,
-    };
-  });
+const ROUND_COLORS = ["#3b82f6", "#8b5cf6", "#f59e0b"];
 
-  const colors = ["#3b82f6", "#8b5cf6", "#f59e0b"];
+function RoundComparisonSection({ allRounds }: { allRounds: RoundData[] }) {
+  if (allRounds.length === 0) return null;
+
+  const roundStats = allRounds.map(computeRoundStats);
 
   return (
-    <div
-      className="rounded-xl p-4 mb-5"
-      style={{ background: "var(--bg-surface)", border: "1px solid var(--border-faint)" }}
-    >
-      <div className="text-sm font-bold mb-3" style={{ color: "var(--text-primary)" }}>
-        Round Comparison
+    <div className="mb-5">
+      {/* Stats cards */}
+      <div
+        className="rounded-xl p-4 mb-4"
+        style={{ background: "var(--bg-surface)", border: "1px solid var(--border-faint)" }}
+      >
+        <div className="text-sm font-bold mb-3" style={{ color: "var(--text-primary)" }}>
+          Round Comparison
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {roundStats.map((rs, i) => (
+            <div
+              key={rs.round}
+              className="rounded-lg p-3 text-center"
+              style={{ background: `${ROUND_COLORS[i]}08`, border: `1px solid ${ROUND_COLORS[i]}20` }}
+            >
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: ROUND_COLORS[i] }}>
+                Round {rs.round}
+              </div>
+              <div className="text-xl font-extrabold font-mono" style={{ color: ROUND_COLORS[i] }}>
+                {rs.delivered}
+              </div>
+              <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>items delivered</div>
+              <div className="text-sm font-bold font-mono mt-1" style={{ color: "var(--text-secondary)" }}>
+                {rs.avgCycleTime.toFixed(1)}d
+              </div>
+              <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>avg cycle time</div>
+              <div className="text-[10px] font-mono mt-1" style={{ color: "var(--text-tertiary)" }}>
+                WIP: {rs.limits.red}/{rs.limits.blue}/{rs.limits.green}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-3 gap-3">
-        {roundStats.map((rs, i) => (
-          <div
-            key={rs.round}
-            className="rounded-lg p-3 text-center"
-            style={{ background: `${colors[i]}08`, border: `1px solid ${colors[i]}20` }}
-          >
-            <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: colors[i] }}>
-              Round {rs.round}
+
+      {/* Side-by-side CFD charts */}
+      <div
+        className="rounded-xl p-4"
+        style={{ background: "var(--bg-surface)", border: "1px solid var(--border-faint)" }}
+      >
+        <div className="text-sm font-bold mb-1" style={{ color: "var(--text-primary)" }}>
+          Cumulative Flow — Round by Round
+        </div>
+        <div className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
+          Compare how flow changed as you adjusted your strategy across rounds.
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {allRounds.map((rd, i) => (
+            <div key={rd.round}>
+              <div className="text-[10px] font-bold text-center mb-1" style={{ color: ROUND_COLORS[i] }}>
+                Round {rd.round}
+              </div>
+              <CfdChart snapshots={rd.snapshots} height={180} />
             </div>
-            <div className="text-xl font-extrabold font-mono" style={{ color: colors[i] }}>
-              {rs.delivered}
-            </div>
-            <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>items delivered</div>
-            <div className="text-sm font-bold font-mono mt-1" style={{ color: "var(--text-secondary)" }}>
-              {rs.avgCycleTime.toFixed(1)}d
-            </div>
-            <div className="text-[9px]" style={{ color: "var(--text-muted)" }}>avg cycle time</div>
-            <div className="text-[10px] font-mono mt-1" style={{ color: "var(--text-tertiary)" }}>
-              WIP: {rs.limits.red}/{rs.limits.blue}/{rs.limits.green}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -103,6 +137,12 @@ export function WipDebriefStep({ items, snapshots, settings, currentDay, roundHi
   const minDay = snapshots.length > 0 ? snapshots[0].day : 1;
   const backlogCount = items.filter((it) => it.location === "backlog").length;
 
+  // Build complete round list including current round (round 3)
+  const allRounds: RoundData[] = [
+    ...(roundHistories ?? []),
+    { round: (roundHistories?.length ?? 0) + 1, items, snapshots, settings },
+  ];
+
   return (
     <div className="fade-up max-w-[960px]">
       <StepHeader
@@ -112,10 +152,8 @@ export function WipDebriefStep({ items, snapshots, settings, currentDay, roundHi
         desc="Let's compare how your approach evolved. Same board, same seed data — the only difference was your strategy."
       />
 
-      {/* Round comparison card */}
-      {roundHistories && roundHistories.length > 0 && (
-        <RoundComparisonCard roundHistories={roundHistories} />
-      )}
+      {/* Round comparison with side-by-side CFDs */}
+      <RoundComparisonSection allRounds={allRounds} />
 
       {/* Dashboard metrics */}
       <div className="mb-5">

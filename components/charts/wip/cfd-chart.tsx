@@ -9,9 +9,11 @@ import { CHART_TOOLTIP, CHART_GRID, CHART_AXIS, CHART_TICK, CHART_LABEL } from "
 interface CfdChartProps {
   snapshots: DaySnapshot[];
   showLittlesLaw?: boolean;
+  height?: number;
 }
 
-export function CfdChart({ snapshots, showLittlesLaw = false }: CfdChartProps) {
+export function CfdChart({ snapshots, showLittlesLaw = false, height = 280 }: CfdChartProps) {
+  const [showBacklog, setShowBacklog] = useState(false);
   const data = cfdData(snapshots);
   if (data.length === 0) return null;
 
@@ -39,7 +41,18 @@ export function CfdChart({ snapshots, showLittlesLaw = false }: CfdChartProps) {
 
   return (
     <div>
-      <ResponsiveContainer width="100%" height={280}>
+      <div className="flex items-center gap-2 mb-2">
+        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showBacklog}
+            onChange={(e) => setShowBacklog(e.target.checked)}
+            className="accent-[#64748b] w-3 h-3"
+          />
+          <span className="text-[10px] font-bold" style={{ color: "var(--text-muted)" }}>Show Backlog</span>
+        </label>
+      </div>
+      <ResponsiveContainer width="100%" height={height}>
         <AreaChart data={data} margin={{ top: 5, right: 10, bottom: 20, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
           <XAxis
@@ -57,7 +70,9 @@ export function CfdChart({ snapshots, showLittlesLaw = false }: CfdChartProps) {
           <Area type="monotone" dataKey="blueActive" stackId="1" stroke="#3b82f6" fill="#3b82f620" name="Blue Act" />
           <Area type="monotone" dataKey="redFinished" stackId="1" stroke="#f87171" fill="#f8717115" name="Red Fin" />
           <Area type="monotone" dataKey="redActive" stackId="1" stroke="#ef4444" fill="#ef444420" name="Red Act" />
-          <Area type="monotone" dataKey="backlog" stackId="1" stroke="#64748b" fill="#64748b15" name="Backlog" />
+          {showBacklog && (
+            <Area type="monotone" dataKey="backlog" stackId="1" stroke="#64748b" fill="#64748b15" name="Backlog" />
+          )}
           {showLittlesLaw && (
             <ReferenceLine
               x={midDay}
