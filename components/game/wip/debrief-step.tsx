@@ -4,7 +4,6 @@ import type { WipWorkItem, DaySnapshot, WipSettings } from "@/types/wip-game";
 import { StepHeader } from "@/components/lesson/step-header";
 import { Card } from "@/components/ui/card";
 import { Btn } from "@/components/ui/button";
-import { DashboardPanel } from "@/components/charts/wip/dashboard-panel";
 import { CfdChart } from "@/components/charts/wip/cfd-chart";
 import { CtScatterChart } from "@/components/charts/wip/ct-scatter-chart";
 import { CtHistogramChart } from "@/components/charts/wip/ct-histogram-chart";
@@ -16,22 +15,6 @@ import { HeatmapChart } from "@/components/charts/wip/heatmap-chart";
 import { WipRunChart } from "@/components/charts/wip/wip-run-chart";
 import { MonteCarloChart } from "@/components/charts/wip/monte-carlo-chart";
 
-interface ChartCardProps {
-  title: string;
-  desc?: string;
-  children: React.ReactNode;
-}
-
-function ChartCard({ title, desc, children }: ChartCardProps) {
-  return (
-    <Card>
-      <div className="text-sm font-bold mb-1" style={{ color: "var(--text-primary)" }}>{title}</div>
-      {desc && <div className="text-xs mb-3.5 leading-relaxed" style={{ color: "var(--text-muted)" }}>{desc}</div>}
-      {children}
-    </Card>
-  );
-}
-
 interface RoundData {
   round: number;
   items: WipWorkItem[];
@@ -40,14 +23,22 @@ interface RoundData {
 }
 
 interface WipDebriefStepProps {
+  /** Combined items across all rounds (for Monte Carlo / overall stats) */
   items: WipWorkItem[];
+  /** Combined snapshots across all rounds */
   snapshots: DaySnapshot[];
   settings: WipSettings;
   currentDay: number;
+  /** Current round's items only (Round 3) */
+  currentRoundItems: WipWorkItem[];
+  /** Current round's snapshots only (Round 3) */
+  currentRoundSnapshots: DaySnapshot[];
   roundHistories?: RoundData[];
   onNext: () => void;
   onBack: () => void;
 }
+
+const ROUND_COLORS = ["#3b82f6", "#8b5cf6", "#f59e0b"];
 
 function computeRoundStats(rh: RoundData) {
   const done = rh.items.filter((it) => it.location === "done" && it.dayStarted && it.dayDone);
@@ -59,22 +50,60 @@ function computeRoundStats(rh: RoundData) {
     delivered: done.length,
     avgCycleTime: avgCt,
     limits: rh.settings.wipLimits,
-    snapshots: rh.snapshots,
   };
 }
 
-const ROUND_COLORS = ["#3b82f6", "#8b5cf6", "#f59e0b"];
+/** Section header for each chart row */
+function ChartRowHeader({ title, desc }: { title: string; desc?: string }) {
+  return (
+    <div className="mb-2 mt-6 first:mt-0">
+      <div className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{title}</div>
+      {desc && <div className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{desc}</div>}
+    </div>
+  );
+}
 
-function RoundComparisonSection({ allRounds }: { allRounds: RoundData[] }) {
-  if (allRounds.length === 0) return null;
+/** A single round column header */
+function RoundLabel({ round, color }: { round: number; color: string }) {
+  return (
+    <div className="text-[10px] font-bold text-center mb-1 uppercase tracking-wider" style={{ color }}>
+      Round {round}
+    </div>
+  );
+}
+
+export function WipDebriefStep({
+  items, snapshots, settings, currentDay,
+  currentRoundItems, currentRoundSnapshots,
+  roundHistories, onNext, onBack,
+}: WipDebriefStepProps) {
+  const backlogCount = items.filter((it) => it.location === "backlog").length;
+
+  // Build complete 3-round list: rounds 1 & 2 from history, round 3 from current props
+  const allRounds: RoundData[] = [
+    ...(roundHistories ?? []),
+    {
+      round: (roundHistories?.length ?? 0) + 1,
+      items: currentRoundItems,
+      snapshots: currentRoundSnapshots,
+      settings,
+    },
+  ];
 
   const roundStats = allRounds.map(computeRoundStats);
 
   return (
-    <div className="mb-5">
-      {/* Stats cards */}
+    <div className="fade-up max-w-[1200px]">
+      <StepHeader
+        tag="Debrief"
+        tagColor="#10b981"
+        title="Analysing Your Flow Across Three Rounds"
+        desc="Compare how your approach evolved. Same board, same seed data — the only difference was your strategy."
+      />
+
+      {/* ── Round Comparison Stats ────────────────────── */}
       <div
-        className="rounded-xl p-4 mb-4"
+        className="rounded-xl p-4 mb-5"
         style={{ background: "var(--bg-surface)", border: "1px solid var(--border-faint)" }}
       >
         <div className="text-sm font-bold mb-3" style={{ color: "var(--text-primary)" }}>
@@ -106,134 +135,132 @@ function RoundComparisonSection({ allRounds }: { allRounds: RoundData[] }) {
         </div>
       </div>
 
-      {/* Side-by-side CFD charts */}
-      <div
-        className="rounded-xl p-4"
-        style={{ background: "var(--bg-surface)", border: "1px solid var(--border-faint)" }}
-      >
-        <div className="text-sm font-bold mb-1" style={{ color: "var(--text-primary)" }}>
-          Cumulative Flow — Round by Round
-        </div>
-        <div className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-          Compare how flow changed as you adjusted your strategy across rounds.
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {allRounds.map((rd, i) => (
-            <div key={rd.round}>
-              <div className="text-[10px] font-bold text-center mb-1" style={{ color: ROUND_COLORS[i] }}>
-                Round {rd.round}
-              </div>
-              <CfdChart snapshots={rd.snapshots} height={180} />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+      {/* ── Side-by-Side Charts ──────────────────────── */}
 
-export function WipDebriefStep({ items, snapshots, settings, currentDay, roundHistories, onNext, onBack }: WipDebriefStepProps) {
-  const totalWipLimit = settings.wipLimits.red + settings.wipLimits.blue + settings.wipLimits.green;
-  const minDay = snapshots.length > 0 ? snapshots[0].day : 1;
-  const backlogCount = items.filter((it) => it.location === "backlog").length;
-
-  // Build complete round list including current round (round 3)
-  const allRounds: RoundData[] = [
-    ...(roundHistories ?? []),
-    { round: (roundHistories?.length ?? 0) + 1, items, snapshots, settings },
-  ];
-
-  return (
-    <div className="fade-up max-w-[960px]">
-      <StepHeader
-        tag="Debrief"
-        tagColor="#10b981"
-        title="Analysing Your Flow Across Three Rounds"
-        desc="Let's compare how your approach evolved. Same board, same seed data — the only difference was your strategy."
+      {/* CFD */}
+      <ChartRowHeader
+        title="Cumulative Flow Diagram"
+        desc="Each band represents a stage. Parallel bands = steady flow. Widening bands = bottleneck forming."
       />
-
-      {/* Round comparison with side-by-side CFDs */}
-      <RoundComparisonSection allRounds={allRounds} />
-
-      {/* Dashboard metrics */}
-      <div className="mb-5">
-        <DashboardPanel items={items} currentDay={currentDay} sleDays={settings.sleDays} />
+      <div className="grid grid-cols-3 gap-3">
+        {allRounds.map((rd, i) => (
+          <Card key={rd.round}>
+            <RoundLabel round={rd.round} color={ROUND_COLORS[i]} />
+            <CfdChart snapshots={rd.snapshots} height={200} />
+          </Card>
+        ))}
       </div>
 
-      <div className="flex flex-col gap-5">
-        {/* CFD */}
-        <ChartCard
-          title="Cumulative Flow Diagram"
-          desc="Each band represents a stage. Parallel bands = steady flow. Widening bands = bottleneck forming. The vertical distance between bands shows WIP."
-        >
-          <CfdChart snapshots={snapshots} showLittlesLaw />
-        </ChartCard>
+      {/* Cycle Time Scatterplot */}
+      <ChartRowHeader
+        title="Cycle Time Scatterplot"
+        desc="Each dot is a completed item. Items above the SLE line missed the Service Level Expectation."
+      />
+      <div className="grid grid-cols-3 gap-3">
+        {allRounds.map((rd, i) => (
+          <Card key={rd.round}>
+            <RoundLabel round={rd.round} color={ROUND_COLORS[i]} />
+            <CtScatterChart items={rd.items} sleDays={rd.settings.sleDays} />
+          </Card>
+        ))}
+      </div>
 
-        {/* Cycle Time Scatter */}
-        <ChartCard
-          title="Cycle Time Scatterplot"
-          desc="Each dot is a completed item. Percentile lines help set realistic expectations. Items above the SLE line missed the Service Level Expectation."
-        >
-          <CtScatterChart items={items} sleDays={settings.sleDays} />
-        </ChartCard>
+      {/* Cycle Time Distribution */}
+      <ChartRowHeader
+        title="Cycle Time Distribution"
+        desc="A tight distribution means predictable delivery. A long tail signals outliers."
+      />
+      <div className="grid grid-cols-3 gap-3">
+        {allRounds.map((rd, i) => (
+          <Card key={rd.round}>
+            <RoundLabel round={rd.round} color={ROUND_COLORS[i]} />
+            <CtHistogramChart items={rd.items} sleDays={rd.settings.sleDays} />
+          </Card>
+        ))}
+      </div>
 
-        {/* Cycle Time Histogram */}
-        <ChartCard
-          title="Cycle Time Distribution"
-          desc="How cycle times are spread. A tight distribution means predictable delivery. A long tail signals outliers and variability."
-        >
-          <CtHistogramChart items={items} sleDays={settings.sleDays} />
-        </ChartCard>
+      {/* Throughput */}
+      <ChartRowHeader
+        title="Throughput"
+        desc="Daily items completed with rolling average. Stable throughput = healthy system."
+      />
+      <div className="grid grid-cols-3 gap-3">
+        {allRounds.map((rd, i) => {
+          const minD = rd.snapshots.length > 0 ? rd.snapshots[0].day : 1;
+          const maxD = rd.snapshots.length > 0 ? rd.snapshots[rd.snapshots.length - 1].day : currentDay;
+          return (
+            <Card key={rd.round}>
+              <RoundLabel round={rd.round} color={ROUND_COLORS[i]} />
+              <WipThroughputChart items={rd.items} minDay={minD} maxDay={maxD} />
+            </Card>
+          );
+        })}
+      </div>
 
-        {/* Throughput */}
-        <ChartCard
-          title="Throughput"
-          desc="Daily items completed (bars) with a 5-day rolling average (line). Stable throughput is a sign of a healthy system."
-        >
-          <WipThroughputChart items={items} minDay={minDay} maxDay={currentDay} />
-        </ChartCard>
+      {/* Aging WIP by Workflow State */}
+      <ChartRowHeader
+        title="Aging WIP by Workflow State"
+        desc="Items by stage and age. Green = safe, red = at risk of breaching SLE."
+      />
+      <div className="grid grid-cols-3 gap-3">
+        {allRounds.map((rd, i) => {
+          const maxDay = rd.snapshots.length > 0 ? rd.snapshots[rd.snapshots.length - 1].day : currentDay;
+          return (
+            <Card key={rd.round}>
+              <RoundLabel round={rd.round} color={ROUND_COLORS[i]} />
+              <WipAgingByStateChart items={rd.items} currentDay={maxDay} sleDays={rd.settings.sleDays} height={220} />
+            </Card>
+          );
+        })}
+      </div>
 
-        {/* Aging WIP */}
-        <ChartCard
-          title="Aging Work In Progress"
-          desc="Current age of every in-progress item. Items approaching the red SLE line need attention before they become outliers."
-        >
-          <AgingWipChart items={items} currentDay={currentDay} sleDays={settings.sleDays} />
-        </ChartCard>
+      {/* Flow Efficiency */}
+      <ChartRowHeader
+        title="Flow Efficiency"
+        desc="Green = time being worked on, red = time waiting. Low efficiency = queue-heavy system."
+      />
+      <div className="grid grid-cols-3 gap-3">
+        {allRounds.map((rd, i) => (
+          <Card key={rd.round}>
+            <RoundLabel round={rd.round} color={ROUND_COLORS[i]} />
+            <FlowEfficiencyChart items={rd.items} />
+          </Card>
+        ))}
+      </div>
 
-        {/* Aging WIP by Workflow State */}
-        <ChartCard
-          title="Aging WIP by Workflow State"
-          desc="Items positioned by workflow stage and age. Coloured bands show the probability of meeting the SLE — items further right can afford to be older (less remaining work). Green = safe, red = at risk."
-        >
-          <WipAgingByStateChart items={items} currentDay={currentDay} sleDays={settings.sleDays} height={280} />
-        </ChartCard>
+      {/* WIP Heat Map */}
+      <ChartRowHeader
+        title="WIP Heat Map"
+        desc="Item count by stage over time. Hot spots = work accumulating."
+      />
+      <div className="grid grid-cols-3 gap-3">
+        {allRounds.map((rd, i) => (
+          <Card key={rd.round}>
+            <RoundLabel round={rd.round} color={ROUND_COLORS[i]} />
+            <HeatmapChart snapshots={rd.snapshots} />
+          </Card>
+        ))}
+      </div>
 
-        {/* Flow Efficiency */}
-        <ChartCard
-          title="Flow Efficiency"
-          desc="For each completed item: green = time spent being worked on, red = time spent waiting. Low efficiency means most time is spent in queues."
-        >
-          <FlowEfficiencyChart items={items} />
-        </ChartCard>
+      {/* WIP Run Chart */}
+      <ChartRowHeader
+        title="WIP Run Chart"
+        desc="Total WIP over time against the aggregate limit."
+      />
+      <div className="grid grid-cols-3 gap-3">
+        {allRounds.map((rd, i) => {
+          const totalLimit = rd.settings.wipLimits.red + rd.settings.wipLimits.blue + rd.settings.wipLimits.green;
+          return (
+            <Card key={rd.round}>
+              <RoundLabel round={rd.round} color={ROUND_COLORS[i]} />
+              <WipRunChart snapshots={rd.snapshots} totalWipLimit={totalLimit} />
+            </Card>
+          );
+        })}
+      </div>
 
-        {/* Heat Map */}
-        <ChartCard
-          title="WIP Heat Map"
-          desc="Item count by stage over time. Hot spots reveal where work accumulated. Cool spots show underutilised capacity."
-        >
-          <HeatmapChart snapshots={snapshots} />
-        </ChartCard>
-
-        {/* WIP Run Chart */}
-        <ChartCard
-          title="WIP Run Chart"
-          desc="Total work in progress over time with the aggregate WIP limit reference. Staying below the limit creates predictable flow."
-        >
-          <WipRunChart snapshots={snapshots} totalWipLimit={totalWipLimit} />
-        </ChartCard>
-
-        {/* Forecasting intro */}
+      {/* ── Forecasting & Insight (combined data) ──── */}
+      <div className="mt-6 flex flex-col gap-5">
         <Card accent="59,130,246">
           <div className="text-sm font-bold text-blue-400 mb-2">Why Is Forecasting Hard?</div>
           <div className="text-[13px] leading-[1.75]" style={{ color: "var(--text-secondary)" }}>
@@ -255,23 +282,26 @@ export function WipDebriefStep({ items, snapshots, settings, currentDay, roundHi
           </div>
         </Card>
 
-        {/* Monte Carlo: How Many */}
-        <ChartCard
-          title="Monte Carlo: How Many in 15 Days?"
-          desc="Using your historical throughput, how many items could be completed in the next 15 days? Based on 500 simulations."
-        >
+        <Card>
+          <div className="text-sm font-bold mb-1" style={{ color: "var(--text-primary)" }}>
+            Monte Carlo: How Many in 15 Days?
+          </div>
+          <div className="text-xs mb-3.5 leading-relaxed" style={{ color: "var(--text-muted)" }}>
+            Using your historical throughput from all rounds, how many items could be completed in the next 15 days?
+          </div>
           <MonteCarloChart items={items} mode="howMany" daysOrTarget={15} />
-        </ChartCard>
+        </Card>
 
-        {/* Monte Carlo: When */}
-        <ChartCard
-          title={`Monte Carlo: When Will ${backlogCount} Backlog Items Be Done?`}
-          desc={`How many days to complete the current ${backlogCount} backlog items? Based on 500 simulations.`}
-        >
+        <Card>
+          <div className="text-sm font-bold mb-1" style={{ color: "var(--text-primary)" }}>
+            Monte Carlo: When Will {backlogCount} Backlog Items Be Done?
+          </div>
+          <div className="text-xs mb-3.5 leading-relaxed" style={{ color: "var(--text-muted)" }}>
+            How many days to complete the current {backlogCount} backlog items? Based on 500 simulations.
+          </div>
           <MonteCarloChart items={items} mode="when" daysOrTarget={Math.max(backlogCount, 5)} />
-        </ChartCard>
+        </Card>
 
-        {/* Insight */}
         <Card accent="139,92,246">
           <div className="text-sm font-bold text-violet-400 mb-2.5">The Kanban Principle</div>
           <div className="text-[13px] text-violet-300 leading-[1.75]">

@@ -242,6 +242,8 @@ export default function WipLimitsLesson() {
           snapshots={game.allSnapshots}
           settings={game.settings}
           currentDay={game.day}
+          currentRoundItems={game.items}
+          currentRoundSnapshots={game.snapshots}
           roundHistories={game.roundHistories}
           onNext={() => setStep(5)}
           onBack={() => setStep(3)}
