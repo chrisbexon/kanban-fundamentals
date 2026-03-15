@@ -11,12 +11,13 @@ interface RoundTransitionProps {
   onStartNextRound: () => void;
 }
 
-const ROUND_BRIEFS: Record<number, { title: string; focus: string; instruction: string; color: string }> = {
+const ROUND_BRIEFS: Record<number, { title: string; focus: string; instruction: string; tip?: string; color: string }> = {
   2: {
     title: "Round 2: Experiment with WIP Limits",
     focus: "WIP Limits",
     instruction:
       "You've seen how the board behaves with default limits. This time, try changing the WIP limits in the settings panel. Lower them, raise them, turn them off entirely. Watch what happens to cycle time and throughput. The same seed data means the only variable is your WIP limits.",
+    tip: "If you lower a WIP limit below the current number of items in that stage, the column will show as over-limit. This is expected — you don't need to remove items. Simply stop pulling new work into that stage and let existing items flow out naturally until WIP drops to the new limit.",
     color: "#8b5cf6",
   },
   3: {
@@ -57,6 +58,14 @@ export function RoundTransition({ completedRound, nextRound, roundHistory, onSta
         <div className="text-[13px] leading-[1.75]" style={{ color: "var(--text-secondary)" }}>
           {brief.instruction}
         </div>
+        {brief.tip && (
+          <div
+            className="text-[12px] leading-[1.7] mt-3 rounded-lg px-3 py-2.5"
+            style={{ background: "var(--bg-surface)", border: "1px solid var(--border-faint)", color: "var(--text-muted)" }}
+          >
+            <strong style={{ color: "var(--text-secondary)" }}>Tip:</strong> {brief.tip}
+          </div>
+        )}
       </Card>
 
       <div className="flex flex-col items-center gap-3 mt-6">

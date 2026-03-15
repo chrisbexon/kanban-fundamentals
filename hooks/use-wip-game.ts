@@ -22,10 +22,24 @@ export interface RoundHistory {
   settings: WipSettings;
 }
 
+/** Deep-copy a work item so nested work bars aren't shared references */
+function cloneItem(it: WipWorkItem): WipWorkItem {
+  return {
+    ...it,
+    work: {
+      red: { ...it.work.red },
+      blue: { ...it.work.blue },
+      green: { ...it.work.green },
+    },
+    blockerWork: { ...it.blockerWork },
+    assignedWorkerIds: [...it.assignedWorkerIds],
+  };
+}
+
 export function useWipGame() {
   const seed = useMemo(() => loadSeed(), []);
 
-  const [items, setItems] = useState<WipWorkItem[]>(() => seed.items.map((it) => ({ ...it })));
+  const [items, setItems] = useState<WipWorkItem[]>(() => seed.items.map(cloneItem));
   const [workers, setWorkers] = useState<Worker[]>(() => makeWorkers());
   const [day, setDay] = useState(SEED_DAYS);
   const [phase, setPhase] = useState<RoundPhase>("assign");
@@ -194,7 +208,7 @@ export function useWipGame() {
 
   /** Restart within current round */
   const handleRestart = useCallback(() => {
-    setItems(seed.items.map((it) => ({ ...it })));
+    setItems(seed.items.map(cloneItem));
     setWorkers(makeWorkers());
     setDay(SEED_DAYS);
     setPhase("assign");
@@ -211,7 +225,7 @@ export function useWipGame() {
     // Save current round history
     const history: RoundHistory = {
       round: gameRound,
-      items: items.map((it) => ({ ...it })),
+      items: items.map(cloneItem),
       snapshots: snapshots.map((s) => ({ ...s })),
       settings: { ...settings, wipLimits: { ...settings.wipLimits }, enforceWip: { ...settings.enforceWip } },
     };
@@ -220,7 +234,7 @@ export function useWipGame() {
     // Reset board for next round
     const nextRound = gameRound + 1;
     setGameRound(nextRound);
-    setItems(seed.items.map((it) => ({ ...it })));
+    setItems(seed.items.map(cloneItem));
     setWorkers(makeWorkers());
     setDay(SEED_DAYS);
     setPhase("assign");
