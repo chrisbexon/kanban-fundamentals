@@ -179,7 +179,7 @@ export function WipAgingByStateChart({ items, currentDay, sleDays = DEFAULT_SLE,
 
                     return (
                       <div
-                        key={item.id}
+                        key={`${item.id}-${ii}`}
                         title={`${item.id}: ${item.age}d in ${colDef.label}${item.blocked ? " (BLOCKED)" : ""}`}
                         className="absolute z-10"
                         style={{
