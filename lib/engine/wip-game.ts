@@ -345,11 +345,15 @@ function canMoveToLocation(
   for (const color of (["red", "blue", "green"] as WorkColor[])) {
     const locs = WIP_LOCATIONS[color];
     if (locs.includes(targetLoc)) {
+      // Moving within the same color stage (e.g. red-active → red-finished)
+      // never increases WIP — the item is already counted. Always allow.
+      if (locs.includes(item.location)) return true;
+
       if (!settings.enforceWip[color]) return true;
 
-      // Count current WIP for this color, excluding the item itself
+      // Count current WIP for this color
       const currentWip = items.filter(
-        (it) => it.id !== item.id && locs.includes(it.location),
+        (it) => locs.includes(it.location),
       ).length;
       return currentWip < settings.wipLimits[color];
     }
